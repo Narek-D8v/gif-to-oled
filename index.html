@@ -10,739 +10,307 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg-0: #0a0a0f;
-    --bg-1: #111118;
-    --bg-2: #161620;
-    --bg-3: #1c1c28;
-    --border: #2a2a38;
-    --border-hi: #3d3d52;
-    --text-0: #e8e8f0;
-    --text-1: #9898b0;
-    --text-2: #5c5c78;
-    --accent: #58a6ff;
-    --accent-dim: rgba(88,166,255,0.12);
-    --accent-glow: rgba(88,166,255,0.25);
-    --green: #3fb950;
-    --green-dim: rgba(63,185,80,0.12);
-    --orange: #d29922;
-    --red: #f85149;
-    --purple: #bc8cff;
-    --radius: 10px;
-    --radius-sm: 6px;
+    --bg-0: #0a0a0f; --bg-1: #111118; --bg-2: #161620; --bg-3: #1c1c28;
+    --border: #2a2a38; --border-hi: #3d3d52;
+    --text-0: #e8e8f0; --text-1: #9898b0; --text-2: #5c5c78;
+    --accent: #58a6ff; --accent-dim: rgba(88,166,255,0.12); --accent-glow: rgba(88,166,255,0.25);
+    --green: #3fb950; --green-dim: rgba(63,185,80,0.12);
+    --orange: #d29922; --red: #f85149; --purple: #bc8cff;
+    --radius: 10px; --radius-sm: 6px;
     --font-mono: 'JetBrains Mono', monospace;
     --font-sans: 'Geist', system-ui, sans-serif;
   }
 
   html { scroll-behavior: smooth; }
-
   body {
-    background: var(--bg-0);
-    color: var(--text-0);
-    font-family: var(--font-sans);
-    min-height: 100vh;
-    padding: 40px 24px 80px;
-    line-height: 1.6;
+    background: var(--bg-0); color: var(--text-0); font-family: var(--font-sans);
+    min-height: 100vh; padding: 40px 24px 80px; line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
-
-  /* Subtle grid background */
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 32px 32px;
-    opacity: 0.25;
-    pointer-events: none;
-    z-index: 0;
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(var(--border) 1px,transparent 1px),
+                      linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size: 32px 32px; opacity: .25; pointer-events: none; z-index: 0;
   }
 
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 860px;
-    margin: 0 auto;
-  }
+  .container { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; }
 
-  /* ── HEADER ── */
+  /* HEADER */
   .header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 40px;
-    padding-bottom: 28px;
-    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--border);
   }
-
   .logo-group { display: flex; align-items: center; gap: 14px; }
-
   .logo-icon {
-    width: 42px; height: 42px;
-    background: var(--bg-3);
-    border: 1px solid var(--border-hi);
-    border-radius: var(--radius-sm);
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-    overflow: hidden;
+    width: 42px; height: 42px; background: var(--bg-3); border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
   }
   .logo-icon::before {
-    content: '';
-    position: absolute;
-    inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: linear-gradient(135deg, var(--accent-dim), transparent);
   }
   .logo-pixels {
-    display: grid;
-    grid-template-columns: repeat(5,1fr);
-    gap: 2px;
-    width: 22px; height: 22px;
-    position: relative;
+    display: grid; grid-template-columns: repeat(5,1fr);
+    gap: 2px; width: 22px; height: 22px; position: relative;
   }
-  .logo-pixels span {
-    border-radius: 1px;
-    background: var(--text-2);
-  }
+  .logo-pixels span { border-radius: 1px; background: var(--text-2); }
   .logo-pixels span.on { background: var(--accent); }
-
   .header-title { line-height: 1.1; }
-  .header-title h1 {
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.4px;
-    color: var(--text-0);
-  }
-  .header-title p {
-    font-size: 12px;
-    color: var(--text-2);
-    font-family: var(--font-mono);
-    margin-top: 2px;
-  }
-
+  .header-title h1 { font-size: 20px; font-weight: 600; letter-spacing: -.4px; }
+  .header-title p { font-size: 12px; color: var(--text-2); font-family: var(--font-mono); margin-top: 2px; }
   .badge {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    background: var(--accent-dim);
-    border: 1px solid rgba(88,166,255,0.3);
-    color: var(--accent);
-    border-radius: 20px;
-    letter-spacing: 0.5px;
+    font-family: var(--font-mono); font-size: 11px; padding: 4px 10px;
+    background: var(--accent-dim); border: 1px solid rgba(88,166,255,.3);
+    color: var(--accent); border-radius: 20px; letter-spacing: .5px;
   }
 
-  /* ── GRID LAYOUT ── */
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  .grid-full { grid-column: 1 / -1; }
+  /* LAYOUT */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-full { grid-column: 1/-1; }
 
-  /* ── CARD ── */
+  /* CARD */
   .card {
-    background: var(--bg-1);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    transition: border-color 0.2s;
+    background: var(--bg-1); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; transition: border-color .2s;
+    animation: fadeIn .4s ease forwards;
   }
   .card:hover { border-color: var(--border-hi); }
-
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
   .card-label {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--text-2);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 11px; font-family: var(--font-mono); color: var(--text-2);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
   }
   .card-label::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0.6;
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; opacity: .6;
   }
 
-  /* ── DROP ZONE ── */
+  /* DROP ZONE */
   .dropzone {
-    border: 1.5px dashed var(--border-hi);
-    border-radius: var(--radius-sm);
-    padding: 36px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-    background: var(--bg-2);
+    border: 1.5px dashed var(--border-hi); border-radius: var(--radius-sm);
+    padding: 36px 24px; text-align: center; cursor: pointer;
+    transition: all .2s ease; position: relative; overflow: hidden; background: var(--bg-2);
   }
   .dropzone::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at center, var(--accent-dim) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center,var(--accent-dim) 0%,transparent 70%);
+    opacity: 0; transition: opacity .3s;
   }
-  .dropzone:hover::before,
-  .dropzone.drag-over::before { opacity: 1; }
-  .dropzone:hover,
-  .dropzone.drag-over {
-    border-color: var(--accent);
-    border-style: solid;
-  }
+  .dropzone:hover::before, .dropzone.drag-over::before { opacity: 1; }
+  .dropzone:hover, .dropzone.drag-over { border-color: var(--accent); border-style: solid; }
   .dropzone.drag-over { transform: scale(1.01); }
-
   .drop-icon {
-    width: 44px; height: 44px;
-    margin: 0 auto 14px;
-    background: var(--bg-3);
-    border: 1px solid var(--border-hi);
-    border-radius: var(--radius-sm);
+    width: 44px; height: 44px; margin: 0 auto 14px; background: var(--bg-3);
+    border: 1px solid var(--border-hi); border-radius: var(--radius-sm);
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    position: relative;
-    z-index: 1;
+    font-size: 20px; position: relative; z-index: 1;
   }
-  .drop-text {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-0);
-    position: relative;
-    z-index: 1;
-  }
+  .drop-text { font-size: 14px; font-weight: 500; position: relative; z-index: 1; }
   .drop-sub {
-    font-size: 12px;
-    color: var(--text-2);
-    margin-top: 6px;
-    font-family: var(--font-mono);
-    position: relative;
-    z-index: 1;
+    font-size: 12px; color: var(--text-2); margin-top: 6px;
+    font-family: var(--font-mono); position: relative; z-index: 1;
   }
   .drop-sub span { color: var(--accent); }
-
   #fileInput { display: none; }
-
   .file-info {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: var(--green-dim);
-    border: 1px solid rgba(63,185,80,0.25);
-    border-radius: var(--radius-sm);
-    margin-top: 12px;
-    font-size: 13px;
-    color: var(--green);
-    font-family: var(--font-mono);
+    display: none; align-items: center; gap: 10px; padding: 10px 14px;
+    background: var(--green-dim); border: 1px solid rgba(63,185,80,.25);
+    border-radius: var(--radius-sm); margin-top: 12px;
+    font-size: 13px; color: var(--green); font-family: var(--font-mono);
   }
   .file-info.visible { display: flex; }
-  .file-info-icon { font-size: 15px; }
 
-  /* ── PREVIEW ── */
+  /* PREVIEW */
   .preview-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    position: relative;
-    padding: 16px;
-    min-height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    background: #000; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    overflow: hidden; position: relative; padding: 16px; min-height: 140px;
   }
   .preview-wrap::before {
-    content: '128 × 64 px';
-    position: absolute;
-    top: 8px; right: 10px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-2);
-    letter-spacing: 0.5px;
+    content: '128 × 64 px'; position: absolute; top: 8px; right: 10px;
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-2); letter-spacing: .5px;
   }
-
   #previewCanvas {
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    width: 256px;
-    height: 128px;
-    border-radius: 2px;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    width: 256px; height: 128px; border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.06);
   }
-
-  .preview-empty {
-    text-align: center;
-    color: var(--text-2);
-  }
+  .preview-empty { text-align: center; color: var(--text-2); }
   .preview-empty p { font-size: 12px; font-family: var(--font-mono); }
 
-  /* ── CONTROLS ── */
+  /* CONTROLS */
   .controls-stack { display: flex; flex-direction: column; gap: 18px; }
-
   .control-row { display: flex; flex-direction: column; gap: 8px; }
-
-  .control-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .control-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-1);
-  }
+  .control-header { display: flex; justify-content: space-between; align-items: center; }
+  .control-name { font-size: 13px; font-weight: 500; color: var(--text-1); }
   .control-value {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--accent);
-    background: var(--accent-dim);
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid rgba(88,166,255,0.2);
-    min-width: 36px;
-    text-align: center;
+    font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+    background: var(--accent-dim); padding: 2px 8px; border-radius: 4px;
+    border: 1px solid rgba(88,166,255,.2); min-width: 36px; text-align: center;
   }
 
-  /* Range slider */
   input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 4px;
-    background: var(--bg-3);
-    border-radius: 4px;
-    outline: none;
-    cursor: pointer;
-    position: relative;
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; background: var(--bg-3); border-radius: 4px; outline: none; cursor: pointer;
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 2px solid var(--bg-1);
-    box-shadow: 0 0 8px var(--accent-glow);
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+    border: 2px solid var(--bg-1); box-shadow: 0 0 8px var(--accent-glow);
+    cursor: pointer; transition: transform .15s, box-shadow .15s;
   }
-  input[type="range"]:hover::-webkit-slider-thumb {
-    transform: scale(1.15);
-    box-shadow: 0 0 14px var(--accent-glow);
-  }
+  input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); box-shadow: 0 0 14px var(--accent-glow); }
   input[type="range"]::-moz-range-thumb {
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 2px solid var(--bg-1);
-    cursor: pointer;
-  }
-
-  /* Slider fill via gradient */
-  .slider-track {
-    position: relative;
+    width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+    border: 2px solid var(--bg-1); cursor: pointer;
   }
   .slider-track input[type="range"] {
-    background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--fill, 50%), var(--bg-3) var(--fill, 50%));
+    background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--fill,50%), var(--bg-3) var(--fill,50%));
   }
 
-  /* Toggle / Checkbox */
   .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-top: 1px solid var(--border);
   }
   .toggle-label-group { display: flex; flex-direction: column; gap: 2px; }
   .toggle-name { font-size: 13px; font-weight: 500; color: var(--text-1); }
   .toggle-desc { font-size: 11px; color: var(--text-2); font-family: var(--font-mono); }
-
   .toggle-switch { position: relative; width: 38px; height: 22px; }
   .toggle-switch input { opacity: 0; width: 0; height: 0; }
   .toggle-track {
-    position: absolute;
-    inset: 0;
-    background: var(--bg-3);
-    border: 1px solid var(--border-hi);
-    border-radius: 11px;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    position: absolute; inset: 0; background: var(--bg-3); border: 1px solid var(--border-hi);
+    border-radius: 11px; cursor: pointer; transition: background .2s, border-color .2s;
   }
   .toggle-track::after {
-    content: '';
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 14px; height: 14px;
-    background: var(--text-2);
-    border-radius: 50%;
-    transition: transform 0.2s, background 0.2s;
+    content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px;
+    background: var(--text-2); border-radius: 50%; transition: transform .2s, background .2s;
   }
-  .toggle-switch input:checked + .toggle-track {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-  }
-  .toggle-switch input:checked + .toggle-track::after {
-    transform: translateX(16px);
-    background: var(--accent);
-    box-shadow: 0 0 6px var(--accent-glow);
-  }
+  .toggle-switch input:checked + .toggle-track { background: var(--accent-dim); border-color: var(--accent); }
+  .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
 
-  /* Select */
   .select-wrap { position: relative; }
   .select-wrap select {
-    width: 100%;
-    appearance: none;
-    background: var(--bg-2);
-    border: 1px solid var(--border-hi);
-    border-radius: var(--radius-sm);
-    color: var(--text-0);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 8px 32px 8px 12px;
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.2s;
+    width: 100%; appearance: none; background: var(--bg-2); border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm); color: var(--text-0); font-family: var(--font-mono);
+    font-size: 12px; padding: 8px 32px 8px 12px; cursor: pointer; outline: none; transition: border-color .2s;
   }
-  .select-wrap select:hover,
-  .select-wrap select:focus { border-color: var(--accent); }
+  .select-wrap select:hover, .select-wrap select:focus { border-color: var(--accent); }
   .select-wrap::after {
-    content: '▾';
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-2);
-    pointer-events: none;
-    font-size: 12px;
+    content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--text-2); pointer-events: none; font-size: 12px;
   }
-
-  /* Frame counter */
   .frame-badge {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--purple);
-    background: rgba(188,140,255,0.1);
-    border: 1px solid rgba(188,140,255,0.2);
-    padding: 2px 8px;
-    border-radius: 4px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--purple);
+    background: rgba(188,140,255,.1); border: 1px solid rgba(188,140,255,.2);
+    padding: 2px 8px; border-radius: 4px;
   }
 
-  /* ── PROGRESS BAR ── */
+  /* PROGRESS */
   .progress-section { display: flex; flex-direction: column; gap: 10px; }
-  .progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; }
   .progress-label { font-size: 13px; font-weight: 500; color: var(--text-1); }
-  .progress-status {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-2);
-  }
-
-  .progress-track {
-    height: 6px;
-    background: var(--bg-3);
-    border-radius: 3px;
-    overflow: hidden;
-    position: relative;
-  }
+  .progress-status { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); }
+  .progress-track { height: 6px; background: var(--bg-3); border-radius: 3px; overflow: hidden; }
   .progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--accent), var(--purple));
-    border-radius: 3px;
-    transition: width 0.3s ease;
-    position: relative;
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg,var(--accent),var(--purple));
+    border-radius: 3px; transition: width .3s ease; position: relative;
   }
   .progress-fill::after {
-    content: '';
-    position: absolute;
-    right: 0; top: 0; bottom: 0;
-    width: 30px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 30px;
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,.3));
     animation: shimmer 1.2s infinite;
   }
-  @keyframes shimmer {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  .progress-steps {
-    display: flex;
-    gap: 4px;
-  }
-  .step {
-    flex: 1;
-    height: 2px;
-    border-radius: 1px;
-    background: var(--border);
-    transition: background 0.3s;
-  }
+  @keyframes shimmer { 0%,100%{opacity:0} 50%{opacity:1} }
+  .progress-steps { display: flex; gap: 4px; }
+  .step { flex: 1; height: 2px; border-radius: 1px; background: var(--border); transition: background .3s; }
   .step.done { background: var(--green); }
   .step.active { background: var(--accent); }
-
   .step-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    font-family: var(--font-mono);
-    color: var(--text-2);
-    margin-top: 4px;
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-family: var(--font-mono); color: var(--text-2); margin-top: 4px;
   }
 
-  /* ── ACTION BUTTONS ── */
+  /* BUTTONS */
   .actions { display: flex; gap: 10px; }
-
   .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 500;
-    font-family: var(--font-sans);
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.15s ease;
-    text-decoration: none;
-    position: relative;
-    overflow: hidden;
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
+    border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+    font-family: var(--font-sans); cursor: pointer; border: 1px solid transparent;
+    transition: all .15s ease; position: relative; overflow: hidden;
   }
-  .btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0);
-    transition: background 0.15s;
-  }
-  .btn:hover::before { background: rgba(255,255,255,0.04); }
+  .btn::before { content:''; position:absolute; inset:0; background:rgba(255,255,255,0); transition:background .15s; }
+  .btn:hover::before { background: rgba(255,255,255,.04); }
   .btn:active { transform: translateY(1px); }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    border-color: rgba(255,255,255,0.15);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 0 var(--accent-glow);
-  }
-  .btn-primary:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 16px var(--accent-glow);
-  }
-
-  .btn-ghost {
-    background: var(--bg-2);
-    color: var(--text-1);
-    border-color: var(--border-hi);
-  }
+  .btn-primary { background: var(--accent); color: #fff; border-color: rgba(255,255,255,.15); box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+  .btn-primary:hover { box-shadow: 0 2px 8px rgba(0,0,0,.4), 0 0 16px var(--accent-glow); }
+  .btn-ghost { background: var(--bg-2); color: var(--text-1); border-color: var(--border-hi); }
   .btn-ghost:hover { color: var(--text-0); border-color: var(--text-2); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
 
-  .btn-icon { font-size: 15px; }
-  .btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none !important;
-  }
-
-  /* ── CODE OUTPUT ── */
+  /* CODE OUTPUT */
   .code-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0;
-    padding: 10px 16px;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-bottom: none;
-    border-radius: var(--radius) var(--radius) 0 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: var(--bg-2); border: 1px solid var(--border);
+    border-bottom: none; border-radius: var(--radius) var(--radius) 0 0;
   }
-
-  .code-header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .code-header-left { display: flex; align-items: center; gap: 10px; }
   .code-dots { display: flex; gap: 6px; }
-  .code-dots span {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-  }
-  .code-dots .d1 { background: #f85149; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dots .d1 { background: var(--red); }
   .code-dots .d2 { background: var(--orange); }
   .code-dots .d3 { background: var(--green); }
-
-  .code-filename {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-2);
-  }
+  .code-filename { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); }
   .code-filename span { color: var(--text-1); }
-
   .code-actions { display: flex; gap: 6px; align-items: center; }
-
   .copy-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    background: var(--bg-3);
-    border: 1px solid var(--border-hi);
-    border-radius: var(--radius-sm);
-    color: var(--text-1);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+    background: var(--bg-3); border: 1px solid var(--border-hi); border-radius: var(--radius-sm);
+    color: var(--text-1); font-family: var(--font-mono); font-size: 11px; cursor: pointer; transition: all .15s;
   }
   .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .copy-btn.copied {
-    border-color: var(--green);
-    color: var(--green);
-    background: var(--green-dim);
-  }
-
+  .copy-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-dim); }
   .code-lang {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-2);
-    padding: 3px 8px;
-    background: var(--bg-3);
-    border-radius: 4px;
-    border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 10px; color: var(--text-2);
+    padding: 3px 8px; background: var(--bg-3); border-radius: 4px; border: 1px solid var(--border);
   }
-
-  .code-body {
-    border: 1px solid var(--border);
-    border-radius: 0 0 var(--radius) var(--radius);
-    overflow: hidden;
-    background: var(--bg-1);
-  }
-
-  .code-lines {
-    display: flex;
-    overflow: auto;
-    max-height: 320px;
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    line-height: 1.7;
-  }
-
+  .code-body { border: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; background: var(--bg-1); }
+  .code-lines { display: flex; overflow: auto; max-height: 320px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; }
   .line-nums {
-    padding: 16px 0;
-    background: var(--bg-2);
-    border-right: 1px solid var(--border);
-    text-align: right;
-    user-select: none;
-    min-width: 48px;
-    color: var(--text-2);
-    font-size: 11px;
+    padding: 16px 0; background: var(--bg-2); border-right: 1px solid var(--border);
+    text-align: right; user-select: none; min-width: 48px; color: var(--text-2); font-size: 11px;
   }
-  .line-nums span {
-    display: block;
-    padding: 0 12px;
-    line-height: 1.7;
-  }
-
+  .line-nums span { display: block; padding: 0 12px; line-height: 1.7; }
   #outputCode {
-    flex: 1;
-    padding: 16px;
-    resize: none;
-    background: transparent;
-    border: none;
-    color: var(--text-0);
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    line-height: 1.7;
-    outline: none;
-    white-space: pre;
-    overflow: auto;
-    min-height: 200px;
-    width: 100%;
+    flex: 1; padding: 16px; resize: none; background: transparent; border: none;
+    color: var(--text-0); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7;
+    outline: none; white-space: pre; overflow: auto; min-height: 200px; width: 100%;
   }
   #outputCode::placeholder { color: var(--text-2); }
-
   .code-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-top: 1px solid var(--border);
-    border-radius: 0 0 var(--radius) var(--radius);
-    margin-top: -1px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px; background: var(--bg-2); border: 1px solid var(--border);
+    border-top: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius); margin-top: -1px;
   }
-
-  .code-stats {
-    display: flex;
-    gap: 16px;
-  }
-  .stat-item {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-2);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
+  .code-stats { display: flex; gap: 16px; }
+  .stat-item { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); display: flex; align-items: center; gap: 5px; }
   .stat-item .val { color: var(--text-1); }
 
-  /* ── FOOTER ── */
-  .footer {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .footer-left {
-    font-size: 12px;
-    color: var(--text-2);
-    font-family: var(--font-mono);
-  }
-  .footer-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  /* FOOTER */
+  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .footer-left { font-size: 12px; color: var(--text-2); font-family: var(--font-mono); }
+  .footer-right { display: flex; gap: 12px; }
   .footer-tag {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    padding: 3px 8px;
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text-2);
+    font-size: 11px; font-family: var(--font-mono); padding: 3px 8px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; color: var(--text-2);
   }
 
-  /* ── SCROLLBAR ── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text-2); }
-
-  /* ── ANIMATION ── */
-  .fade-in {
-    animation: fadeIn 0.4s ease forwards;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .card { animation: fadeIn 0.4s ease forwards; }
-  .card:nth-child(1) { animation-delay: 0.05s; }
-  .card:nth-child(2) { animation-delay: 0.1s; }
-  .card:nth-child(3) { animation-delay: 0.15s; }
-  .card:nth-child(4) { animation-delay: 0.2s; }
 
   @media (max-width: 640px) {
     .grid { grid-template-columns: 1fr; }
@@ -754,7 +322,6 @@
 <body>
 <div class="container">
 
-  <!-- HEADER -->
   <header class="header">
     <div class="logo-group">
       <div class="logo-icon">
@@ -774,10 +341,8 @@
     <div class="badge">v1.0.0</div>
   </header>
 
-  <!-- ROW 1: Drop + Preview -->
-  <div class="grid" style="grid-template-columns: 1.1fr 0.9fr;">
-
-    <!-- Drop zone card -->
+  <!-- ROW 1 -->
+  <div class="grid" style="grid-template-columns:1.1fr .9fr;">
     <div class="card">
       <div class="card-label">Input</div>
       <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
@@ -787,13 +352,12 @@
       </div>
       <input type="file" id="fileInput" accept=".gif,image/gif" />
       <div class="file-info" id="fileInfo">
-        <span class="file-info-icon">✓</span>
+        <span>✓</span>
         <span id="fileName">animation.gif</span>
         <span class="frame-badge" id="frameBadge">—</span>
       </div>
     </div>
 
-    <!-- Preview card -->
     <div class="card">
       <div class="card-label">Preview</div>
       <div class="preview-wrap">
@@ -803,18 +367,14 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- ROW 2: Controls + Progress -->
+  <!-- ROW 2 -->
   <div class="grid">
-
-    <!-- Controls card -->
     <div class="card">
       <div class="card-label">Parameters</div>
       <div class="controls-stack">
 
-        <!-- Threshold -->
         <div class="control-row">
           <div class="control-header">
             <span class="control-name">Brightness Threshold</span>
@@ -823,17 +383,15 @@
           <div class="slider-track">
             <input type="range" id="thresholdSlider" min="0" max="255" value="128"
               oninput="document.getElementById('thresholdVal').textContent=this.value;
-                       this.style.setProperty('--fill', (this.value/255*100)+'%')" />
+                       this.style.setProperty('--fill',(this.value/255*100)+'%');
+                       scheduleSave(); renderCurrentFrame();" />
           </div>
         </div>
 
-        <!-- Scale -->
         <div class="control-row">
-          <div class="control-header">
-            <span class="control-name">Scale Mode</span>
-          </div>
+          <div class="control-header"><span class="control-name">Scale Mode</span></div>
           <div class="select-wrap">
-            <select id="scaleMode">
+            <select id="scaleMode" onchange="scheduleSave();renderCurrentFrame();">
               <option value="fit">Fit (keep ratio)</option>
               <option value="fill">Fill (crop)</option>
               <option value="stretch">Stretch</option>
@@ -841,13 +399,10 @@
           </div>
         </div>
 
-        <!-- Dithering -->
         <div class="control-row">
-          <div class="control-header">
-            <span class="control-name">Dithering</span>
-          </div>
+          <div class="control-header"><span class="control-name">Dithering</span></div>
           <div class="select-wrap">
-            <select id="ditherMode">
+            <select id="ditherMode" onchange="scheduleSave();renderCurrentFrame();">
               <option value="none">None</option>
               <option value="floyd">Floyd–Steinberg</option>
               <option value="ordered">Ordered (Bayer 4×4)</option>
@@ -855,31 +410,28 @@
           </div>
         </div>
 
-        <!-- Invert toggle -->
         <div class="toggle-row">
           <div class="toggle-label-group">
             <span class="toggle-name">Invert Colors</span>
             <span class="toggle-desc">swap black ↔ white pixels</span>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="invertCheck" />
+            <input type="checkbox" id="invertCheck" onchange="scheduleSave();renderCurrentFrame();" />
             <span class="toggle-track"></span>
           </label>
         </div>
 
-        <!-- Flip H -->
         <div class="toggle-row">
           <div class="toggle-label-group">
             <span class="toggle-name">Flip Horizontal</span>
             <span class="toggle-desc">mirror on X axis</span>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="flipHCheck" />
+            <input type="checkbox" id="flipHCheck" onchange="renderCurrentFrame();" />
             <span class="toggle-track"></span>
           </label>
         </div>
 
-        <!-- Rotate bits toggle -->
         <div class="toggle-row">
           <div class="toggle-label-group">
             <span class="toggle-name">MSB First</span>
@@ -894,7 +446,6 @@
       </div>
     </div>
 
-    <!-- Progress + Actions card -->
     <div class="card">
       <div class="card-label">Processing</div>
 
@@ -907,20 +458,14 @@
           <div class="progress-fill" id="progressFill"></div>
         </div>
         <div class="progress-steps">
-          <div class="step" id="step1"></div>
-          <div class="step" id="step2"></div>
-          <div class="step" id="step3"></div>
-          <div class="step" id="step4"></div>
+          <div class="step" id="step1"></div><div class="step" id="step2"></div>
+          <div class="step" id="step3"></div><div class="step" id="step4"></div>
         </div>
         <div class="step-labels">
-          <span>load</span>
-          <span>decode</span>
-          <span>render</span>
-          <span>encode</span>
+          <span>load</span><span>decode</span><span>render</span><span>encode</span>
         </div>
       </div>
 
-      <!-- Frame nav -->
       <div class="control-row" style="margin-bottom:16px;">
         <div class="control-header">
           <span class="control-name">Preview Frame</span>
@@ -929,23 +474,21 @@
         <div class="slider-track">
           <input type="range" id="frameSlider" min="0" max="0" value="0"
             oninput="document.getElementById('frameVal').textContent=this.value;
-                     this.style.setProperty('--fill', (this.value/Math.max(this.max,1)*100)+'%')" />
+                     this.style.setProperty('--fill',(this.value/Math.max(this.max,1)*100)+'%');
+                     renderFrame(parseInt(this.value));" />
         </div>
       </div>
 
       <div class="actions">
-        <button class="btn btn-primary" id="convertBtn">
-          <span class="btn-icon">⚡</span>
-          Convert
+        <button class="btn btn-primary" id="convertBtn" onclick="startConvert()">
+          <span>⚡</span> Convert
         </button>
-        <button class="btn btn-ghost" id="resetBtn">
-          <span class="btn-icon">↺</span>
-          Reset
+        <button class="btn btn-ghost" onclick="resetAll()">
+          <span>↺</span> Reset
         </button>
       </div>
 
-      <!-- Stats row -->
-      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
         <div class="code-stats">
           <div class="stat-item">Frames: <span class="val" id="statFrames">—</span></div>
           <div class="stat-item">Size: <span class="val" id="statSize">—</span></div>
@@ -953,33 +496,23 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- ROW 3: Code Output (full width) -->
-  <div class="card grid-full" style="padding:0; overflow:hidden;">
+  <!-- ROW 3: code output -->
+  <div class="card grid-full" style="padding:0;overflow:hidden;">
     <div class="code-header">
       <div class="code-header-left">
-        <div class="code-dots">
-          <span class="d1"></span>
-          <span class="d2"></span>
-          <span class="d3"></span>
-        </div>
+        <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
         <div class="code-filename"><span>oled_frames</span>.c</div>
       </div>
       <div class="code-actions">
         <span class="code-lang">C / Arduino</span>
-        <button class="copy-btn" id="copyBtn" onclick="handleCopy()">
-          <span>⎘</span> Copy
-        </button>
+        <button class="copy-btn" onclick="handleCopy()"><span>⎘</span> Copy</button>
       </div>
     </div>
-
     <div class="code-body">
       <div class="code-lines">
-        <div class="line-nums" id="lineNums">
-          <span>1</span>
-        </div>
+        <div class="line-nums" id="lineNums"><span>1</span></div>
         <textarea id="outputCode" spellcheck="false"
           placeholder="// Generated C array will appear here after conversion.
 //
@@ -990,20 +523,16 @@
 // };"></textarea>
       </div>
     </div>
-
     <div class="code-footer">
       <div class="code-stats">
         <div class="stat-item">Lines: <span class="val" id="statLines">—</span></div>
         <div class="stat-item">Chars: <span class="val" id="statChars">—</span></div>
         <div class="stat-item">Ready: <span class="val" id="statReady" style="color:var(--text-2)">No</span></div>
       </div>
-      <button class="copy-btn" onclick="handleCopy()">
-        <span>⎘</span> Copy all
-      </button>
+      <button class="copy-btn" onclick="handleCopy()"><span>⎘</span> Copy all</button>
     </div>
   </div>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-left">OLED GIF Converter · 128×64 monochrome</div>
     <div class="footer-right">
@@ -1013,507 +542,460 @@
     </div>
   </footer>
 
-</div><!-- /container -->
+</div>
 
 <script>
-// ─────────────────────────────────────────────
-//  UI HELPERS (ready for your logic)
-// ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let gifFrames = [];   // [{imageData, delay}, ...]
+let gifWidth  = 0;
+let gifHeight = 0;
 
-/** Update progress bar (0–100) and status text */
-function setProgress(pct, statusText) {
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressStatus').textContent = statusText || Math.round(pct) + '%';
-  const steps = ['step1','step2','step3','step4'];
-  steps.forEach((id, i) => {
-    const el = document.getElementById(id);
-    el.className = 'step' + (pct > (i+1)*25 ? ' done' : pct > i*25 ? ' active' : '');
+// ═══════════════════════════════════════════════════════════════
+//  SETTINGS  —  localStorage (mirrors server.js schema)
+//  Fields: lang, threshold, invert, scaleMode, ditherMode, flipH, msb
+// ═══════════════════════════════════════════════════════════════
+const SETTINGS_KEY = 'oled_converter_settings';
+
+function getSettings() {
+  return {
+    lang:       document.documentElement.lang || 'en',
+    threshold:  parseInt(document.getElementById('thresholdSlider').value, 10),
+    invert:     document.getElementById('invertCheck').checked  ? 1 : 0,
+    scaleMode:  document.getElementById('scaleMode').value,
+    ditherMode: document.getElementById('ditherMode').value,
+    flipH:      document.getElementById('flipHCheck').checked   ? 1 : 0,
+    msb:        document.getElementById('msbCheck').checked     ? 1 : 0,
+  };
+}
+
+function applySettings(s) {
+  if (s.threshold  != null) {
+    const sl = document.getElementById('thresholdSlider');
+    sl.value = s.threshold;
+    sl.style.setProperty('--fill', (s.threshold / 255 * 100) + '%');
+    document.getElementById('thresholdVal').textContent = s.threshold;
+  }
+  if (s.invert     != null) document.getElementById('invertCheck').checked = !!s.invert;
+  if (s.scaleMode  != null) document.getElementById('scaleMode').value     = s.scaleMode;
+  if (s.ditherMode != null) document.getElementById('ditherMode').value    = s.ditherMode;
+  if (s.flipH      != null) document.getElementById('flipHCheck').checked  = !!s.flipH;
+  if (s.msb        != null) document.getElementById('msbCheck').checked    = !!s.msb;
+}
+
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(getSettings())); } catch(_) {}
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) applySettings(JSON.parse(raw));
+  } catch(_) {}
+}
+
+let _saveTimer = null;
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveSettings, 600);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════════
+function setProgress(pct, txt) {
+  document.getElementById('progressFill').style.width    = pct + '%';
+  document.getElementById('progressStatus').textContent  = txt || Math.round(pct) + '%';
+  ['step1','step2','step3','step4'].forEach((id,i) => {
+    document.getElementById(id).className =
+      'step' + (pct>(i+1)*25?' done':pct>i*25?' active':'');
   });
 }
 
-/** Set output code and update line numbers + stats */
 function setOutputCode(code) {
   const ta = document.getElementById('outputCode');
   ta.value = code;
   const lines = code.split('\n');
-  document.getElementById('lineNums').innerHTML = lines.map((_,i) => `<span>${i+1}</span>`).join('');
+  document.getElementById('lineNums').innerHTML =
+    lines.map((_,i) => `<span>${i+1}</span>`).join('');
   document.getElementById('statLines').textContent = lines.length;
   document.getElementById('statChars').textContent = code.length;
-  document.getElementById('statReady').textContent = code.trim() ? 'Yes' : 'No';
-  document.getElementById('statReady').style.color = code.trim() ? 'var(--green)' : 'var(--text-2)';
+  const ok = code.trim().length > 0;
+  document.getElementById('statReady').textContent  = ok ? 'Yes' : 'No';
+  document.getElementById('statReady').style.color  = ok ? 'var(--green)' : 'var(--text-2)';
 }
 
-/** Show file info bar */
-function showFileInfo(name, frameCount) {
-  document.getElementById('fileName').textContent = name;
-  document.getElementById('frameBadge').textContent = frameCount ? `${frameCount} frames` : '';
+function showFileInfo(name, n) {
+  document.getElementById('fileName').textContent   = name;
+  document.getElementById('frameBadge').textContent = n ? `${n} frames` : '';
   document.getElementById('fileInfo').classList.add('visible');
   document.getElementById('previewEmpty').style.display = 'none';
 }
 
-/** Update stats panel */
-function setStats(frames, widthHeight, bytes) {
+function setStats(frames, size, bytes) {
   document.getElementById('statFrames').textContent = frames ?? '—';
-  document.getElementById('statSize').textContent = widthHeight ?? '—';
-  document.getElementById('statBytes').textContent = bytes ?? '—';
+  document.getElementById('statSize').textContent   = size   ?? '—';
+  document.getElementById('statBytes').textContent  = bytes  ?? '—';
 }
 
-/** Set max frame slider */
 function setFrameCount(n) {
   const s = document.getElementById('frameSlider');
-  s.max = Math.max(0, n - 1);
-  s.value = 0;
-  document.getElementById('frameVal').textContent = 0;
+  s.max   = Math.max(0, n-1); s.value = 0;
+  s.style.setProperty('--fill','0%');
+  document.getElementById('frameVal').textContent   = 0;
   document.getElementById('frameBadge').textContent = n + ' frames';
 }
 
-// Copy button
 function handleCopy() {
   const code = document.getElementById('outputCode').value;
   if (!code.trim()) return;
   navigator.clipboard.writeText(code).then(() => {
-    document.querySelectorAll('.copy-btn').forEach(btn => {
-      btn.classList.add('copied');
-      btn.innerHTML = '<span>✓</span> Copied!';
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        btn.innerHTML = '<span>⎘</span> Copy';
-      }, 2000);
+    document.querySelectorAll('.copy-btn').forEach(b => {
+      b.classList.add('copied'); b.innerHTML = '<span>✓</span> Copied!';
+      setTimeout(() => { b.classList.remove('copied'); b.innerHTML = '<span>⎘</span> Copy'; }, 2000);
     });
   });
 }
 
-// Drag & drop visual feedback
-const dz = document.getElementById('dropzone');
-['dragenter','dragover'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('drag-over'); }));
-['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('drag-over'); }));
-dz.addEventListener('drop', ev => {
-  const file = ev.dataTransfer.files[0];
-  if (file) document.getElementById('fileInput').files = ev.dataTransfer.files;
-  // fire change event manually
-  document.getElementById('fileInput').dispatchEvent(new Event('change'));
-});
-
-// Sync slider fill on load
-document.getElementById('thresholdSlider').style.setProperty('--fill', '50%');
-document.getElementById('frameSlider').style.setProperty('--fill', '0%');
-
-// ─────────────────────────────────────────────
-//  YOUR LOGIC GOES BELOW THIS LINE
-// ─────────────────────────────────────────────
-// ==================== DOM Elements ====================
-const fileInput = document.getElementById('fileInput');
-const dropzone = document.getElementById('dropzone');
-const thresholdSlider = document.getElementById('thresholdSlider');
-const invertCheck = document.getElementById('invertCheck');
-const flipHCheck = document.getElementById('flipHCheck');
-const scaleModeSelect = document.getElementById('scaleMode');
-const ditherModeSelect = document.getElementById('ditherMode');
-const msbCheck = document.getElementById('msbCheck');
-const frameSlider = document.getElementById('frameSlider');
-const convertBtn = document.getElementById('convertBtn');
-const resetBtn = document.getElementById('resetBtn');
-const previewCanvas = document.getElementById('previewCanvas');
-const ctx = previewCanvas.getContext('2d');
-
-// ==================== Global State ====================
-let rawFrames = [];           // массив объектов { pixels, width, height }
-let currentFrameIndex = 0;
-let processing = false;       // флаг, чтобы не запускать несколько конвертаций одновременно
-
-// ==================== Helper: ImageData scaling ====================
-function scaleImageData(srcImageData, srcWidth, srcHeight, targetWidth, targetHeight, mode) {
-  const srcCanvas = document.createElement('canvas');
-  srcCanvas.width = srcWidth;
-  srcCanvas.height = srcHeight;
-  const srcCtx = srcCanvas.getContext('2d');
-  srcCtx.putImageData(srcImageData, 0, 0);
-
-  const dstCanvas = document.createElement('canvas');
-  dstCanvas.width = targetWidth;
-  dstCanvas.height = targetHeight;
-  const dstCtx = dstCanvas.getContext('2d');
-  dstCtx.fillStyle = '#000000';
-  dstCtx.fillRect(0, 0, targetWidth, targetHeight);
-
-  const sw = srcWidth, sh = srcHeight;
-  const tw = targetWidth, th = targetHeight;
-
-  if (mode === 'stretch') {
-    dstCtx.drawImage(srcCanvas, 0, 0, sw, sh, 0, 0, tw, th);
-  } else if (mode === 'fit') {
-    const ratio = Math.min(tw / sw, th / sh);
-    const dw = sw * ratio;
-    const dh = sh * ratio;
-    const dx = (tw - dw) / 2;
-    const dy = (th - dh) / 2;
-    dstCtx.drawImage(srcCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
-  } else if (mode === 'fill') {
-    const ratio = Math.max(tw / sw, th / sh);
-    const dw = sw * ratio;
-    const dh = sh * ratio;
-    const dx = (tw - dw) / 2;
-    const dy = (th - dh) / 2;
-    dstCtx.drawImage(srcCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
-  }
-
-  return dstCtx.getImageData(0, 0, targetWidth, targetHeight);
+function showToast(msg, type) {
+  const clr = {green:'var(--green)',red:'var(--red)',accent:'var(--accent)'}[type]||'var(--green)';
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position:'fixed',bottom:'28px',right:'28px',zIndex:'9999',
+    padding:'9px 16px',background:'var(--bg-2)',
+    border:'1px solid '+clr,borderRadius:'var(--radius-sm)',color:clr,
+    fontFamily:'var(--font-mono)',fontSize:'12px',
+    boxShadow:'0 4px 16px rgba(0,0,0,.4)',transition:'opacity .4s',opacity:'0',
+  });
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.style.opacity='1');
+  setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 2200);
 }
 
-// ==================== Dithering ====================
-// Bayer 4x4 matrix (values 0..15)
-const BAYER_MATRIX = [
-  [ 0,  8,  2, 10],
-  [12,  4, 14,  6],
-  [ 3, 11,  1,  9],
-  [15,  7, 13,  5]
-];
+// ═══════════════════════════════════════════════════════════════
+//  GIF DECODER  (pure JS, no libraries)
+// ═══════════════════════════════════════════════════════════════
+function parseGIF(buffer) {
+  const d = new Uint8Array(buffer);
+  let p = 0;
+  const rb = () => d[p++];
+  const rw = () => { const v=d[p]|(d[p+1]<<8); p+=2; return v; };
+  const skip = () => { let n; while ((n=rb())!==0) p+=n; };
 
-// Floyd‑Steinberg error diffusion
-function floydSteinberg(luminance, width, height, threshold, invert) {
-  const errors = new Float32Array(width * height);
-  for (let i = 0; i < width * height; i++) {
-    errors[i] = luminance[i];
+  if (String.fromCharCode(d[0],d[1],d[2]) !== 'GIF')
+    throw new Error('Not a GIF file');
+  p = 6;
+
+  const W = rw(), H = rw();
+  const pk = rb();
+  const hasGCT = (pk>>7)&1, gctSz = 2<<(pk&7);
+  rb(); rb(); // bg, aspect
+
+  let gct = null;
+  if (hasGCT) {
+    gct = [];
+    for (let i=0;i<gctSz;i++){ gct.push([d[p],d[p+1],d[p+2]]); p+=3; }
   }
-  const bits = new Uint8Array(width * height);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const idx = y * width + x;
-      let oldVal = errors[idx];
-      let newVal = oldVal > threshold ? 255 : 0;
-      bits[idx] = newVal > 0 ? 1 : 0;
-      const error = oldVal - newVal;
-      if (error === 0) continue;
-      // diffusion coefficients
-      if (x + 1 < width)  errors[idx + 1]     += error * 7 / 16;
-      if (y + 1 < height) {
-        if (x > 0)        errors[idx + width - 1] += error * 3 / 16;
-                          errors[idx + width]     += error * 5 / 16;
-        if (x + 1 < width) errors[idx + width + 1] += error * 1 / 16;
-      }
+
+  const frames = [];
+  let disposal=0, delay=100, tIdx=-1;
+  let canvas = new Uint8ClampedArray(W*H*4);
+
+  // LZW
+  function lzw(minCS, comp) {
+    const clr=1<<minCS, eof=clr+1;
+    let cs=minCS+1, dict=[], bb=0, bl=0, ci=0, prev=-1;
+    const reset=()=>{dict=[];for(let i=0;i<clr;i++)dict.push([i]);dict.push([]);dict.push([]);};
+    reset();
+    const rc=()=>{
+      while(bl<cs&&ci<comp.length){bb|=comp[ci++]<<bl;bl+=8;}
+      const c=bb&((1<<cs)-1); bb>>=cs; bl-=cs; return c;
+    };
+    const out=[];
+    let code;
+    while((code=rc())!==eof){
+      if(code===clr){reset();cs=minCS+1;prev=-1;continue;}
+      if(prev===-1){out.push(...dict[code]);prev=code;continue;}
+      const e=code<dict.length?[...dict[code]]:[...dict[prev],dict[prev][0]];
+      out.push(...e);
+      dict.push([...dict[prev],e[0]]);
+      if(dict.length===(1<<cs)&&cs<12)cs++;
+      prev=code;
     }
+    return out;
   }
-  if (invert) {
-    for (let i = 0; i < bits.length; i++) bits[i] = 1 - bits[i];
-  }
-  return bits;
-}
 
-// Ordered dithering (Bayer 4x4)
-function orderedDither(luminance, width, height, threshold, invert) {
-  const bits = new Uint8Array(width * height);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const idx = y * width + x;
-      const lum = luminance[idx];
-      const bayer = BAYER_MATRIX[y % 4][x % 4];
-      // Normalize bayer to 0..255 range: (bayer + 0.5) / 16 * 256 = bayer * 16 + 8
-      const thresholdBayer = (bayer * 16 + 8);
-      const white = lum > thresholdBayer;
-      bits[idx] = white ? 1 : 0;
+  while (p < d.length) {
+    const blk = rb();
+    if (blk===0x3B) break;
+
+    if (blk===0x21) {
+      const lbl = rb();
+      if (lbl===0xF9) {
+        rb();
+        const g=rb(); disposal=(g>>3)&7;
+        const ht=g&1; delay=rw()*10;
+        tIdx=ht?rb():-1; if(!ht)rb(); rb();
+      } else skip();
+      continue;
     }
-  }
-  if (invert) {
-    for (let i = 0; i < bits.length; i++) bits[i] = 1 - bits[i];
-  }
-  return bits;
-}
 
-// Simple threshold (no dither)
-function simpleThreshold(luminance, width, height, threshold, invert) {
-  const bits = new Uint8Array(width * height);
-  for (let i = 0; i < width * height; i++) {
-    bits[i] = luminance[i] > threshold ? 1 : 0;
-  }
-  if (invert) {
-    for (let i = 0; i < bits.length; i++) bits[i] = 1 - bits[i];
-  }
-  return bits;
-}
+    if (blk===0x2C) {
+      const fl=rw(),ft=rw(),fw=rw(),fh=rw();
+      const ip=rb();
+      const hasLCT=(ip>>7)&1, intl=(ip>>6)&1, lctSz=2<<(ip&7);
+      let ct=gct;
+      if(hasLCT){ct=[];for(let i=0;i<lctSz;i++){ct.push([d[p],d[p+1],d[p+2]]);p+=3;}}
+      const mcs=rb();
+      const comp=[];let n;
+      while((n=rb())!==0){for(let i=0;i<n;i++)comp.push(d[p++]);}
+      let idx=lzw(mcs,comp);
 
-// ==================== Convert a single frame to ImageData (for preview) ====================
-function processSingleFrame(frame, options) {
-  const { width, height, pixels } = frame; // pixels: Uint8ClampedArray RGBA
-  const srcImageData = new ImageData(pixels, width, height);
-
-  // 1. Scale to 128x64
-  const scaled = scaleImageData(
-    srcImageData, width, height,
-    128, 64, options.scaleMode
-  );
-
-  // 2. Compute luminance (0..255) for each pixel
-  const data = scaled.data;
-  const lum = new Uint8Array(128 * 64);
-  for (let i = 0; i < 128 * 64; i++) {
-    const r = data[i * 4];
-    const g = data[i * 4 + 1];
-    const b = data[i * 4 + 2];
-    lum[i] = 0.299 * r + 0.587 * g + 0.114 * b;
-  }
-
-  // 3. Dithering / threshold
-  let bits;
-  if (options.ditherMode === 'floyd') {
-    bits = floydSteinberg(lum, 128, 64, options.threshold, options.invert);
-  } else if (options.ditherMode === 'ordered') {
-    bits = orderedDither(lum, 128, 64, options.threshold, options.invert);
-  } else {
-    bits = simpleThreshold(lum, 128, 64, options.threshold, options.invert);
-  }
-
-  // 4. Optional horizontal flip
-  if (options.flipH) {
-    const flipped = new Uint8Array(128 * 64);
-    for (let y = 0; y < 64; y++) {
-      for (let x = 0; x < 128; x++) {
-        flipped[y * 128 + x] = bits[y * 128 + (127 - x)];
-      }
-    }
-    bits = flipped;
-  }
-
-  // 5. Build preview ImageData (black/white)
-  const previewData = new ImageData(128, 64);
-  const previewPixels = previewData.data;
-  for (let i = 0; i < 128 * 64; i++) {
-    const value = bits[i] === 1 ? 255 : 0;
-    previewPixels[i * 4] = value;
-    previewPixels[i * 4 + 1] = value;
-    previewPixels[i * 4 + 2] = value;
-    previewPixels[i * 4 + 3] = 255;
-  }
-  return previewData;
-}
-
-// ==================== Convert a single frame to byte array (for C output) ====================
-function processFrameToBytes(frame, options) {
-  // Same as above, but pack bits into bytes (1024 bytes)
-  const { width, height, pixels } = frame;
-  const srcImageData = new ImageData(pixels, width, height);
-  const scaled = scaleImageData(srcImageData, width, height, 128, 64, options.scaleMode);
-
-  const data = scaled.data;
-  const lum = new Uint8Array(128 * 64);
-  for (let i = 0; i < 128 * 64; i++) {
-    const r = data[i * 4];
-    const g = data[i * 4 + 1];
-    const b = data[i * 4 + 2];
-    lum[i] = 0.299 * r + 0.587 * g + 0.114 * b;
-  }
-
-  let bits;
-  if (options.ditherMode === 'floyd') {
-    bits = floydSteinberg(lum, 128, 64, options.threshold, options.invert);
-  } else if (options.ditherMode === 'ordered') {
-    bits = orderedDither(lum, 128, 64, options.threshold, options.invert);
-  } else {
-    bits = simpleThreshold(lum, 128, 64, options.threshold, options.invert);
-  }
-
-  if (options.flipH) {
-    const flipped = new Uint8Array(128 * 64);
-    for (let y = 0; y < 64; y++) {
-      for (let x = 0; x < 128; x++) {
-        flipped[y * 128 + x] = bits[y * 128 + (127 - x)];
-      }
-    }
-    bits = flipped;
-  }
-
-  // Pack bits into bytes (1024 bytes = 128 * 64 / 8)
-  const byteArray = new Uint8Array(1024);
-  for (let y = 0; y < 64; y++) {
-    for (let x = 0; x < 128; x += 8) {
-      let byte = 0;
-      for (let bit = 0; bit < 8; bit++) {
-        const pixelBit = bits[y * 128 + x + bit];
-        if (options.msbFirst) {
-          // MSB first: bit 7 corresponds to leftmost pixel
-          if (pixelBit) byte |= (1 << (7 - bit));
-        } else {
-          // LSB first: bit 0 corresponds to leftmost pixel
-          if (pixelBit) byte |= (1 << bit);
+      // deinterlace
+      if(intl){
+        const map=new Array(fh);
+        let row=0;
+        for(const[st,step]of[[0,8],[4,8],[2,4],[1,2]])
+          for(let r=st;r<fh;r+=step)map[r]=row++;
+        const di=new Array(idx.length);
+        for(let r=0;r<fh;r++){
+          const src=map[r]*fw, dst=r*fw;
+          for(let c=0;c<fw;c++)di[dst+c]=idx[src+c];
         }
+        idx=di;
       }
-      const byteIndex = y * 16 + (x / 8);
-      byteArray[byteIndex] = byte;
+
+      for(let r=0;r<fh;r++) for(let c=0;c<fw;c++){
+        const i=idx[r*fw+c];
+        if(i===tIdx) continue;
+        const px=((ft+r)*W+(fl+c))*4;
+        const rgb=ct[i]||[0,0,0];
+        canvas[px]=rgb[0]; canvas[px+1]=rgb[1]; canvas[px+2]=rgb[2]; canvas[px+3]=255;
+      }
+
+      frames.push({ imageData: new ImageData(canvas.slice(),W,H), delay });
+
+      if(disposal===2) canvas=new Uint8ClampedArray(W*H*4);
+      delay=100; tIdx=-1; disposal=0;
+      continue;
+    }
+    skip();
+  }
+  return { frames, width:W, height:H };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  IMAGE → 1-BIT PIPELINE
+// ═══════════════════════════════════════════════════════════════
+const OW=128, OH=64;
+
+function scaleImageData(src, sw, sh, mode) {
+  const tc=document.createElement('canvas'); tc.width=OW; tc.height=OH;
+  const ctx=tc.getContext('2d');
+  ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+  const sc=document.createElement('canvas'); sc.width=sw; sc.height=sh;
+  sc.getContext('2d').putImageData(src,0,0);
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,OW,OH);
+  if(mode==='stretch'){
+    ctx.drawImage(sc,0,0,OW,OH);
+  } else if(mode==='fill'){
+    const s=Math.max(OW/sw,OH/sh), dw=sw*s, dh=sh*s;
+    ctx.drawImage(sc,(OW-dw)/2,(OH-dh)/2,dw,dh);
+  } else {
+    const s=Math.min(OW/sw,OH/sh), dw=sw*s, dh=sh*s;
+    ctx.drawImage(sc,(OW-dw)/2,(OH-dh)/2,dw,dh);
+  }
+  return ctx.getImageData(0,0,OW,OH);
+}
+
+function toGrey(id) {
+  const g=new Float32Array(OW*OH);
+  for(let i=0;i<g.length;i++){const p=i*4;g[i]=.299*id.data[p]+.587*id.data[p+1]+.114*id.data[p+2];}
+  return g;
+}
+
+function floydSteinberg(grey, thr) {
+  const g=grey.slice(), bits=new Uint8Array(OW*OH);
+  for(let y=0;y<OH;y++) for(let x=0;x<OW;x++){
+    const i=y*OW+x, old=g[i], nw=old<thr?0:255;
+    bits[i]=nw?1:0; const e=old-nw;
+    if(x+1<OW)         g[i+1]      +=e*7/16;
+    if(y+1<OH){
+      if(x>0)           g[i+OW-1]  +=e*3/16;
+                        g[i+OW]    +=e*5/16;
+      if(x+1<OW)        g[i+OW+1]  +=e*1/16;
     }
   }
-  return byteArray;
+  return bits;
 }
 
-// ==================== Update preview (current frame) ====================
-function updatePreview() {
-  if (!rawFrames.length) return;
-  const frame = rawFrames[currentFrameIndex];
-  const options = {
-    threshold: parseInt(thresholdSlider.value),
-    invert: invertCheck.checked,
-    flipH: flipHCheck.checked,
-    scaleMode: scaleModeSelect.value,
-    ditherMode: ditherModeSelect.value,
-    msbFirst: msbCheck.checked   // not needed for preview, but for consistency
-  };
-  const previewImageData = processSingleFrame(frame, options);
-  ctx.putImageData(previewImageData, 0, 0);
-  // Also update frame slider value display
-  document.getElementById('frameVal').textContent = currentFrameIndex;
+const BAYER4=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function bayerDither(grey,thr){
+  return grey.map((v,i)=>{
+    const x=i%OW,y=Math.floor(i/OW);
+    return (v+(BAYER4[(y%4)*4+(x%4)]/16-.5)*64)>=thr?1:0;
+  });
 }
 
-// ==================== Generate C array code ====================
-function generateCArray(bytesArray) {
-  const lines = [];
-  lines.push('const uint8_t frames[][1024] PROGMEM = {');
-  for (let f = 0; f < bytesArray.length; f++) {
-    const frameBytes = bytesArray[f];
-    let row = '  { ';
-    for (let i = 0; i < frameBytes.length; i++) {
-      row += `0x${frameBytes[i].toString(16).padStart(2, '0')}`;
-      if (i < frameBytes.length - 1) row += ', ';
-      if ((i + 1) % 16 === 0 && i !== frameBytes.length - 1) {
-        lines.push(row);
-        row = '    ';
-      }
+function threshold(grey,thr){ return grey.map(v=>v>=thr?1:0); }
+
+function flipH(bits){
+  const out=new Uint8Array(bits.length);
+  for(let y=0;y<OH;y++) for(let x=0;x<OW;x++)
+    out[y*OW+(OW-1-x)]=bits[y*OW+x];
+  return out;
+}
+
+// SSD1306 vertical addressing: page=row/8, bit=row%8
+function packSSD1306(bits,msb){
+  const out=new Uint8Array(OW*OH/8);
+  for(let y=0;y<OH;y++){
+    const pg=Math.floor(y/8), bp=y%8;
+    for(let x=0;x<OW;x++){
+      const bi=pg*OW+x, b=bits[y*OW+x]?1:0;
+      out[bi]|=msb?b<<(7-bp):b<<bp;
     }
-    lines.push(row + ' }' + (f < bytesArray.length - 1 ? ',' : ''));
   }
-  lines.push('};');
-  return lines.join('\n');
+  return out;
 }
 
-// ==================== Full conversion (button click) ====================
-async function convertAllFrames() {
-  if (!rawFrames.length || processing) return;
-  processing = true;
-  setProgress(0, 'Starting...');
-  const total = rawFrames.length;
-  const bytesArray = [];
-
-  const options = {
-    threshold: parseInt(thresholdSlider.value),
-    invert: invertCheck.checked,
-    flipH: flipHCheck.checked,
-    scaleMode: scaleModeSelect.value,
-    ditherMode: ditherModeSelect.value,
-    msbFirst: msbCheck.checked
-  };
-
-  for (let i = 0; i < total; i++) {
-    // Allow UI to update between frames
-    await new Promise(resolve => setTimeout(resolve, 0));
-    const frameBytes = processFrameToBytes(rawFrames[i], options);
-    bytesArray.push(frameBytes);
-    const percent = ((i + 1) / total) * 100;
-    setProgress(percent, `Frame ${i+1}/${total}`);
+function drawBits(bits){
+  const cv=document.getElementById('previewCanvas');
+  const ctx=cv.getContext('2d');
+  const id=ctx.createImageData(OW,OH);
+  for(let i=0;i<bits.length;i++){
+    const v=bits[i]?255:0;
+    id.data[i*4]=v; id.data[i*4+1]=v; id.data[i*4+2]=v; id.data[i*4+3]=255;
   }
-
-  const cCode = generateCArray(bytesArray);
-  setOutputCode(cCode);
-  // Update stats
-  const totalBytes = bytesArray.length * 1024;
-  setStats(bytesArray.length, '128×64', totalBytes);
-  setProgress(100, 'Done');
-  processing = false;
+  ctx.putImageData(id,0,0);
 }
 
-// ==================== Load and decode GIF ====================
-async function loadGif(file) {
-  if (!file) return;
-  try {
-    setProgress(5, 'Reading file...');
-    const arrayBuffer = await file.arrayBuffer();
-    setProgress(20, 'Decoding GIF...');
-    const gif = new GIF(arrayBuffer);
-    // decompressFrames(true) applies disposal and transparency
-    const frames = gif.decompressFrames(true);
-    if (!frames || frames.length === 0) throw new Error('No frames found');
-    rawFrames = frames.map(f => ({
-      pixels: f.pixels,   // Uint8ClampedArray RGBA
-      width: f.dims.width,
-      height: f.dims.height
-    }));
-    setProgress(100, 'Loaded');
-    // Reset UI
-    currentFrameIndex = 0;
-    frameSlider.max = rawFrames.length - 1;
-    frameSlider.value = 0;
-    frameSlider.style.setProperty('--fill', '0%');
-    document.getElementById('frameVal').textContent = '0';
-    showFileInfo(file.name, rawFrames.length);
-    setFrameCount(rawFrames.length);
-    // Update preview
-    updatePreview();
-    // Clear previous output
-    setOutputCode('');
-    setStats(null, null, null);
-  } catch (err) {
-    console.error(err);
-    setProgress(0, 'Error loading GIF');
-    alert('Failed to load GIF: ' + err.message);
-  }
+function processFrame(imageData){
+  const thr   = parseInt(document.getElementById('thresholdSlider').value,10);
+  const dith  = document.getElementById('ditherMode').value;
+  const inv   = document.getElementById('invertCheck').checked;
+  const flip  = document.getElementById('flipHCheck').checked;
+  const scale = document.getElementById('scaleMode').value;
+
+  const scaled = scaleImageData(imageData, imageData.width, imageData.height, scale);
+  const grey   = toGrey(scaled);
+
+  let bits;
+  if(dith==='floyd')        bits=floydSteinberg(grey,thr);
+  else if(dith==='ordered') bits=bayerDither(grey,thr);
+  else                      bits=threshold(grey,thr);
+
+  if(flip) bits=flipH(bits);
+  if(inv)  bits=bits.map(b=>b^1);
+  return bits;
 }
 
-// ==================== Event listeners ====================
-fileInput.addEventListener('change', e => {
-  if (e.target.files.length) loadGif(e.target.files[0]);
-});
+function renderFrame(idx){
+  if(!gifFrames.length) return;
+  drawBits(processFrame(gifFrames[Math.min(idx,gifFrames.length-1)].imageData));
+}
+function renderCurrentFrame(){
+  renderFrame(parseInt(document.getElementById('frameSlider').value,10));
+}
 
-// Parameters that affect preview (update on every input)
-thresholdSlider.addEventListener('input', () => {
-  if (rawFrames.length) updatePreview();
-});
-invertCheck.addEventListener('change', () => {
-  if (rawFrames.length) updatePreview();
-});
-flipHCheck.addEventListener('change', () => {
-  if (rawFrames.length) updatePreview();
-});
-scaleModeSelect.addEventListener('change', () => {
-  if (rawFrames.length) updatePreview();
-});
-ditherModeSelect.addEventListener('change', () => {
-  if (rawFrames.length) updatePreview();
-});
-// msbFirst doesn't affect preview, only conversion
+// ═══════════════════════════════════════════════════════════════
+//  C ARRAY ENCODER
+// ═══════════════════════════════════════════════════════════════
+function encodeToC(allBits){
+  const msb=document.getElementById('msbCheck').checked;
+  const n=allBits.length, bpf=OW*OH/8;
+  let o=`// Auto-generated by OLED GIF Converter\n`;
+  o+=`// ${OW}x${OH} px · ${n} frame${n!==1?'s':''} · ${n*bpf} bytes total\n\n`;
+  o+=`#include <avr/pgmspace.h>\n\n`;
+  o+=`#define OLED_FRAMES      ${n}\n`;
+  o+=`#define OLED_FRAME_BYTES ${bpf}\n\n`;
+  o+=`const uint8_t oled_frames[OLED_FRAMES][OLED_FRAME_BYTES] PROGMEM = {\n`;
+  for(let f=0;f<n;f++){
+    const packed=packSSD1306(allBits[f],msb);
+    const hex=Array.from(packed).map(b=>'0x'+b.toString(16).padStart(2,'0'));
+    const lines=[];
+    for(let i=0;i<hex.length;i+=16) lines.push('    '+hex.slice(i,i+16).join(', '));
+    o+=`  { // frame ${f}\n${lines.join(',\n')}\n  }`;
+    o+=f<n-1?',\n':'\n';
+  }
+  o+='};\n';
+  return o;
+}
 
-frameSlider.addEventListener('input', () => {
-  currentFrameIndex = parseInt(frameSlider.value);
-  document.getElementById('frameVal').textContent = currentFrameIndex;
-  if (rawFrames.length) updatePreview();
-  // Update slider fill
-  const max = parseFloat(frameSlider.max);
-  const percent = max ? (currentFrameIndex / max) * 100 : 0;
-  frameSlider.style.setProperty('--fill', `${percent}%`);
-});
+// ═══════════════════════════════════════════════════════════════
+//  CONVERT  /  RESET
+// ═══════════════════════════════════════════════════════════════
+async function startConvert(){
+  if(!gifFrames.length){ showToast('Load a GIF first','red'); return; }
+  setProgress(0,'starting…');
+  document.getElementById('convertBtn').disabled=true;
+  const allBits=[];
+  for(let i=0;i<gifFrames.length;i++){
+    setProgress(25+i/gifFrames.length*50, `frame ${i+1}/${gifFrames.length}`);
+    allBits.push(processFrame(gifFrames[i].imageData));
+    await new Promise(r=>setTimeout(r,0));
+  }
+  setProgress(85,'encoding…');
+  await new Promise(r=>setTimeout(r,0));
+  const code=encodeToC(allBits);
+  setOutputCode(code);
+  setStats(gifFrames.length,`${OW}×${OH}`,(gifFrames.length*OW*OH/8)+' B');
+  setProgress(100,'done ✓');
+  document.getElementById('convertBtn').disabled=false;
+  showToast(`${gifFrames.length} frame${gifFrames.length!==1?'s':''} converted`,'green');
+}
 
-convertBtn.addEventListener('click', () => {
-  if (rawFrames.length && !processing) convertAllFrames();
-});
-
-resetBtn.addEventListener('click', () => {
-  if (processing) return;
-  rawFrames = [];
-  fileInput.value = '';
+function resetAll(){
+  gifFrames=[]; gifWidth=0; gifHeight=0;
+  document.getElementById('fileInput').value='';
   document.getElementById('fileInfo').classList.remove('visible');
-  document.getElementById('previewEmpty').style.display = 'block';
-  setOutputCode('');
-  setStats(null, null, null);
-  setProgress(0, 'idle');
-  ctx.clearRect(0, 0, 128, 64);
-  currentFrameIndex = 0;
-  frameSlider.max = 0;
-  frameSlider.value = 0;
-  document.getElementById('frameVal').textContent = '0';
-});
+  document.getElementById('previewEmpty').style.display='';
+  document.getElementById('previewCanvas').getContext('2d').clearRect(0,0,OW,OH);
+  setFrameCount(0); setProgress(0,'idle'); setOutputCode(''); setStats(null,null,null);
+  showToast('Reset','accent');
+}
 
-// Initialize preview empty
-ctx.fillStyle = '#000';
-ctx.fillRect(0, 0, 128, 64);
-document.getElementById('previewEmpty').style.display = 'block';
-setProgress(0, 'idle');
+// ═══════════════════════════════════════════════════════════════
+//  FILE HANDLING
+// ═══════════════════════════════════════════════════════════════
+async function handleFile(file){
+  if(!file||!file.type.includes('gif')){ showToast('Please load a .gif file','red'); return; }
+  setProgress(10,'reading…');
+  try {
+    const buf=await file.arrayBuffer();
+    setProgress(30,'parsing…');
+    const res=parseGIF(buf);
+    gifFrames=res.frames; gifWidth=res.width; gifHeight=res.height;
+    if(!gifFrames.length) throw new Error('No frames found');
+    setProgress(60,'decoded');
+    setFrameCount(gifFrames.length);
+    showFileInfo(file.name,gifFrames.length);
+    setStats(gifFrames.length,`${gifWidth}×${gifHeight}`,'—');
+    renderFrame(0);
+    setProgress(100,'ready');
+    showToast(`Loaded ${gifFrames.length} frame${gifFrames.length!==1?'s':''}`,'green');
+  } catch(e){
+    setProgress(0,'error');
+    showToast('Failed: '+e.message,'red');
+    console.error(e);
+  }
+}
 
+document.getElementById('fileInput').addEventListener('change', e => handleFile(e.target.files[0]));
 
+const dz=document.getElementById('dropzone');
+['dragenter','dragover'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('drag-over');}));
+['dragleave','drop'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.remove('drag-over');}));
+dz.addEventListener('drop',ev=>{ const f=ev.dataTransfer.files[0]; if(f) handleFile(f); });
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('thresholdSlider').style.setProperty('--fill','50%');
+document.getElementById('frameSlider').style.setProperty('--fill','0%');
+loadSettings();
 </script>
 </body>
 </html>
