@@ -1,29 +1,71 @@
-# 🚀 OLED GIF Converter
-_**This is a simple, browser-based tool designed for ESP32 and Arduino enthusiasts. It allows you to convert any GIF animation into a C++ compatible array format to display animations on SSD1306 128x64 OLED screens.**_
+# 📟 OLED GIF Converter
 
-# ✨ Features
-### Auto-Scaling: Automatically resizes any GIF to 128x64 pixels.
+**OLED GIF Converter** is a professional browser-based tool designed to transform animated GIFs into C-style byte arrays (HEX). It is specifically optimized for monochrome OLED displays (like **SSD1306**) used in **Arduino**, **ESP32**, and **STM32** projects.
 
-### Monochrome Conversion: Uses a brightness threshold to turn frames into high-contrast black & white pixels.
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20Website-brightgreen?style=for-the-badge&logo=github)](https://narek-d8v.github.io/gif-to-oled/)
 
-### Animation Support: Decompresses GIF frames and converts them into a 2D array (animation_frames[frame_count][1024]).
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Language: JavaScript](https://img.shields.io/badge/Language-JavaScript-f7df1e.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Deployment: GitHub Pages](https://img.shields.io/badge/Deployment-GitHub%20Pages-222222.svg)](https://pages.github.com/)
 
-### PROGMEM Ready: Generates code that stores data in Flash memory to save RAM on your microcontroller.
+---
 
-### Instant Preview: See how your GIF will look on the OLED display before uploading the code.
+## 🚀 Live Access
 
-# 🛠 How to Use
-## Open the [GitHub Pages](https://pages.github.com/).
+No installation required. Use the tool directly online:
+👉 **[https://narek-d8v.github.io/gif-to-oled/](https://narek-d8v.github.io/gif-to-oled/)**
 
-### Upload your .gif file.
+---
 
-### Wait for the frames to process.
+## 📸 Demo
 
-### Copy the generated code from the text area.
+> *Replace this with a screenshot of your tool's interface to attract more users!*
+![OLED GIF Converter Preview](./assets/demo_preview.gif)
 
-### Paste it into your Arduino sketch and use display.drawBitmap() to play the animation.
+---
 
-# 📦 Built With
-### gifuct-js — GIF decompression.
+## ✨ Features
 
-### Pure JavaScript & HTML5 Canvas.
+- **⚡ High-Performance Conversion:** Entirely client-side processing using `Vanilla JS`.
+- **🎨 Advanced Dithering:**
+  - **Floyd-Steinberg:** For smooth gradients and high-detail images.
+  - **Ordered Dithering (4x4):** For a classic retro-digital look.
+- **🛠 Precise Controls:**
+  - Real-time frame-by-frame preview.
+  - Dynamic **Threshold** adjustment.
+  - One-click **Inversion** toggle.
+- **📐 Smart Scaling:**
+  - **Fit:** Maintain aspect ratio.
+  - **Fill:** Cover the entire 128x64 area.
+  - **Stretch:** Force exact dimensions.
+- **💾 Hardware Optimized:**
+  - Generates `PROGMEM` arrays to save precious RAM on Arduino Uno/Nano.
+  - Supports **MSB First** bit order (standard for Adafruit_SSD1306).
+- **🌌 Modern UI:** Dark cyberpunk-inspired theme with smooth animations and JetBrains Mono typography.
+
+---
+
+## 🛠 Usage Guide
+
+1. **Upload:** Drag & drop your GIF or click the upload zone.
+2. **Configure:** - Choose your **Dithering** method for the best look.
+   - Adjust the **Threshold** slider to catch the right details.
+   - Select **Scaling** to fit your screen perfectly.
+3. **Generate:** Preview the animation using the frame slider.
+4. **Copy:** Click "Copy Code" and paste the array directly into your C++/Arduino project.
+
+---
+
+## 💻 Arduino / ESP32 Code Example
+
+The generated output is ready-to-use with libraries like `Adafruit_SSD1306` or `U8g2`:
+
+```cpp
+// Example of generated output
+const uint8_t epd_bitmap_allArray[1][1024] PROGMEM = {
+    { 0x00, 0x18, 0x3C, 0x7E, 0xFF, 0x7E, 0x3C, 0x18, ... }
+};
+
+// Usage with Adafruit_SSD1306:
+display.drawBitmap(0, 0, epd_bitmap_allArray[frame_index], 128, 64, WHITE);
+display.display();
