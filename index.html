@@ -130,7 +130,7 @@
     overflow: hidden; position: relative; padding: 16px; min-height: 140px;
   }
   .preview-wrap::before {
-    content: '128 × 64 px'; position: absolute; top: 8px; right: 10px;
+    content: attr(data-res); position: absolute; top: 8px; right: 10px;
     font-family: var(--font-mono); font-size: 10px; color: var(--text-2); letter-spacing: .5px;
   }
   #previewCanvas {
@@ -308,6 +308,32 @@
     background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px; color: var(--text-2);
   }
 
+  /* TEXT INPUT */
+  .text-input {
+    width: 100%; background: var(--bg-2); border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm); color: var(--text-0); font-family: var(--font-mono);
+    font-size: 12px; padding: 8px 12px; outline: none; transition: border-color .2s;
+  }
+  .text-input:hover, .text-input:focus { border-color: var(--accent); }
+  .text-input::placeholder { color: var(--text-2); }
+
+  /* BYTE ORDER PILLS */
+  .pill-group { display: flex; gap: 6px; }
+  .pill {
+    flex: 1; text-align: center; padding: 7px 10px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border-hi); background: var(--bg-2); cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-1);
+    transition: all .15s; user-select: none;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--text-0); }
+  .pill.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .pill em { display: block; font-style: normal; font-size: 9px; color: var(--text-2); margin-top: 2px; }
+  .pill.active em { color: var(--accent); opacity: .7; }
+
+  /* DOWNLOAD BTN */
+  .btn-download { background: var(--bg-2); color: var(--green); border-color: rgba(63,185,80,.3); }
+  .btn-download:hover { background: var(--green-dim); border-color: var(--green); }
+
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
@@ -338,7 +364,7 @@
         <p>// 128×64 · 1-bit · C array output</p>
       </div>
     </div>
-    <div class="badge">v1.0.0</div>
+    <div class="badge">v2.0.0</div>
   </header>
 
   <!-- ROW 1 -->
@@ -360,10 +386,44 @@
 
     <div class="card">
       <div class="card-label">Preview</div>
-      <div class="preview-wrap">
+      <div class="preview-wrap" id="previewWrap">
         <canvas id="previewCanvas" width="128" height="64"></canvas>
         <div class="preview-empty" id="previewEmpty" style="position:absolute;">
           <p>no file loaded</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px;">
+        <button class="btn btn-ghost" id="playBtn" onclick="togglePlay()" style="padding:6px 14px;font-size:12px;" disabled>
+          ▶ Play
+        </button>
+        <div style="display:flex;align-items:center;gap:6px;flex:1;">
+          <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-2);">fps</span>
+          <div class="select-wrap" style="flex:1;">
+            <select id="fpsOverride" style="padding:5px 28px 5px 10px;font-size:11px;" onchange="updatePlaySpeed();">
+              <option value="0">GIF native</option>
+              <option value="5">5 fps</option>
+              <option value="10">10 fps</option>
+              <option value="15">15 fps</option>
+              <option value="24">24 fps</option>
+              <option value="30">30 fps</option>
+            </select>
+          </div>
+        </div>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-2);" id="fpsDisplay">—</span>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div class="control-header" style="margin-bottom:8px;"><span class="control-name" style="font-size:12px;">Output Resolution</span></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="number" class="text-input" id="resW" value="128" min="8" max="256" step="8"
+            style="width:64px;text-align:center;" oninput="onResChange();" />
+          <span style="color:var(--text-2);font-family:var(--font-mono);font-size:12px;">×</span>
+          <input type="number" class="text-input" id="resH" value="64" min="8" max="128" step="8"
+            style="width:64px;text-align:center;" oninput="onResChange();" />
+          <div class="pill-group" style="flex:1;">
+            <div class="pill active" id="res128x64" onclick="setRes(128,64)">128×64</div>
+            <div class="pill" id="res128x32" onclick="setRes(128,32)">128×32</div>
+            <div class="pill" id="res64x48"  onclick="setRes(64,48)">64×48</div>
+          </div>
         </div>
       </div>
     </div>
@@ -427,7 +487,18 @@
             <span class="toggle-desc">mirror on X axis</span>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="flipHCheck" onchange="renderCurrentFrame();" />
+            <input type="checkbox" id="flipHCheck" onchange="scheduleSave();renderCurrentFrame();" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-label-group">
+            <span class="toggle-name">Flip Vertical</span>
+            <span class="toggle-desc">mirror on Y axis</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="flipVCheck" onchange="scheduleSave();renderCurrentFrame();" />
             <span class="toggle-track"></span>
           </label>
         </div>
@@ -435,12 +506,24 @@
         <div class="toggle-row">
           <div class="toggle-label-group">
             <span class="toggle-name">MSB First</span>
-            <span class="toggle-desc">bit order per byte</span>
+            <span class="toggle-desc">bit order within each byte</span>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="msbCheck" checked />
+            <input type="checkbox" id="msbCheck" checked onchange="scheduleSave();" />
             <span class="toggle-track"></span>
           </label>
+        </div>
+
+        <div class="control-row" style="margin-top:4px;">
+          <div class="control-header"><span class="control-name">Byte Order</span></div>
+          <div class="pill-group">
+            <div class="pill active" id="pillVertical" onclick="setByteOrder('vertical')">
+              Vertical<em>SSD1306 pages</em>
+            </div>
+            <div class="pill" id="pillHorizontal" onclick="setByteOrder('horizontal')">
+              Horizontal<em>row-by-row</em>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -488,6 +571,25 @@
         </button>
       </div>
 
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px;">
+        <div class="control-row">
+          <div class="control-header"><span class="control-name">Output Format</span></div>
+          <div class="select-wrap">
+            <select id="outputFormat" onchange="scheduleSave();updateLangLabel(this.value);updateCodeFilename();">
+              <option value="c_progmem">C array — PROGMEM (Arduino)</option>
+              <option value="c_ram">C array — RAM</option>
+              <option value="hex_flat">Hex dump (flat)</option>
+              <option value="bin_literal">Binary literal (0b…)</option>
+            </select>
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="control-header"><span class="control-name">Variable Name</span></div>
+          <input type="text" class="text-input" id="varName" value="oled_frames"
+            placeholder="oled_frames" oninput="scheduleSave();updateCodeFilename();" />
+        </div>
+      </div>
+
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
         <div class="code-stats">
           <div class="stat-item">Frames: <span class="val" id="statFrames">—</span></div>
@@ -503,10 +605,11 @@
     <div class="code-header">
       <div class="code-header-left">
         <div class="code-dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
-        <div class="code-filename"><span>oled_frames</span>.c</div>
+        <div class="code-filename" id="codeFilename"><span id="codeFilenameVar">oled_frames</span>.c</div>
       </div>
       <div class="code-actions">
-        <span class="code-lang">C / Arduino</span>
+        <span class="code-lang" id="codeLangLabel">C / Arduino</span>
+        <button class="btn btn-download" style="padding:5px 12px;font-size:11px;font-family:var(--font-mono);" onclick="handleDownload()">⬇ Download</button>
         <button class="copy-btn" onclick="handleCopy()"><span>⎘</span> Copy</button>
       </div>
     </div>
@@ -560,13 +663,19 @@ const SETTINGS_KEY = 'oled_converter_settings';
 
 function getSettings() {
   return {
-    lang:       document.documentElement.lang || 'en',
-    threshold:  parseInt(document.getElementById('thresholdSlider').value, 10),
-    invert:     document.getElementById('invertCheck').checked  ? 1 : 0,
-    scaleMode:  document.getElementById('scaleMode').value,
-    ditherMode: document.getElementById('ditherMode').value,
-    flipH:      document.getElementById('flipHCheck').checked   ? 1 : 0,
-    msb:        document.getElementById('msbCheck').checked     ? 1 : 0,
+    lang:        document.documentElement.lang || 'en',
+    threshold:   parseInt(document.getElementById('thresholdSlider').value, 10),
+    invert:      document.getElementById('invertCheck').checked  ? 1 : 0,
+    scaleMode:   document.getElementById('scaleMode').value,
+    ditherMode:  document.getElementById('ditherMode').value,
+    flipH:       document.getElementById('flipHCheck').checked   ? 1 : 0,
+    flipV:       document.getElementById('flipVCheck').checked   ? 1 : 0,
+    msb:         document.getElementById('msbCheck').checked     ? 1 : 0,
+    byteOrder:   currentByteOrder,
+    outputFormat:document.getElementById('outputFormat').value,
+    varName:     document.getElementById('varName').value || 'oled_frames',
+    resW:        OW,
+    resH:        OH,
   };
 }
 
@@ -577,11 +686,16 @@ function applySettings(s) {
     sl.style.setProperty('--fill', (s.threshold / 255 * 100) + '%');
     document.getElementById('thresholdVal').textContent = s.threshold;
   }
-  if (s.invert     != null) document.getElementById('invertCheck').checked = !!s.invert;
-  if (s.scaleMode  != null) document.getElementById('scaleMode').value     = s.scaleMode;
-  if (s.ditherMode != null) document.getElementById('ditherMode').value    = s.ditherMode;
-  if (s.flipH      != null) document.getElementById('flipHCheck').checked  = !!s.flipH;
-  if (s.msb        != null) document.getElementById('msbCheck').checked    = !!s.msb;
+  if (s.invert      != null) document.getElementById('invertCheck').checked  = !!s.invert;
+  if (s.scaleMode   != null) document.getElementById('scaleMode').value      = s.scaleMode;
+  if (s.ditherMode  != null) document.getElementById('ditherMode').value     = s.ditherMode;
+  if (s.flipH       != null) document.getElementById('flipHCheck').checked   = !!s.flipH;
+  if (s.flipV       != null) document.getElementById('flipVCheck').checked   = !!s.flipV;
+  if (s.msb         != null) document.getElementById('msbCheck').checked     = !!s.msb;
+  if (s.byteOrder   != null) setByteOrder(s.byteOrder);
+  if (s.outputFormat!= null) document.getElementById('outputFormat').value   = s.outputFormat;
+  if (s.varName     != null) document.getElementById('varName').value        = s.varName;
+  if (s.resW != null && s.resH != null) setRes(s.resW, s.resH);
 }
 
 function saveSettings() {
@@ -656,6 +770,21 @@ function handleCopy() {
       setTimeout(() => { b.classList.remove('copied'); b.innerHTML = '<span>⎘</span> Copy'; }, 2000);
     });
   });
+}
+
+function handleDownload() {
+  const code = document.getElementById('outputCode').value;
+  if (!code.trim()) { showToast('Nothing to download yet', 'red'); return; }
+  const fmt  = document.getElementById('outputFormat').value;
+  const name = (document.getElementById('varName').value||'oled_frames').replace(/[^a-zA-Z0-9_]/g,'_');
+  const ext  = fmt==='hex_flat' ? '.txt' : '.c';
+  const blob = new Blob([code], {type:'text/plain'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = name + ext;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Downloaded ' + name + ext, 'green');
 }
 
 function showToast(msg, type) {
@@ -789,7 +918,114 @@ function parseGIF(buffer) {
 // ═══════════════════════════════════════════════════════════════
 //  IMAGE → 1-BIT PIPELINE
 // ═══════════════════════════════════════════════════════════════
-const OW=128, OH=64;
+let OW = 128, OH = 64;
+let currentByteOrder = 'vertical'; // 'vertical' | 'horizontal'
+
+// ── resolution ─────────────────────────────────────────────────
+function setRes(w, h) {
+  OW = w; OH = h;
+  document.getElementById('resW').value = w;
+  document.getElementById('resH').value = h;
+  ['res128x64','res128x32','res64x48'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+  const key = `res${w}x${h}`;
+  if (document.getElementById(key)) document.getElementById(key).classList.add('active');
+  updatePreviewWrapLabel();
+  updateCanvasSize();
+  renderCurrentFrame();
+  scheduleSave();
+}
+
+function onResChange() {
+  const w = parseInt(document.getElementById('resW').value, 10) || 128;
+  const h = parseInt(document.getElementById('resH').value, 10) || 64;
+  OW = Math.max(8, Math.min(256, w));
+  OH = Math.max(8, Math.min(128, h));
+  ['res128x64','res128x32','res64x48'].forEach(id =>
+    document.getElementById(id).classList.remove('active'));
+  updatePreviewWrapLabel();
+  updateCanvasSize();
+  renderCurrentFrame();
+  scheduleSave();
+}
+
+function updateCanvasSize() {
+  const cv = document.getElementById('previewCanvas');
+  cv.width  = OW; cv.height = OH;
+  // Scale display: fit within 280px wide, 150px tall
+  const scaleX = 280 / OW, scaleY = 150 / OH;
+  const s = Math.min(scaleX, scaleY, 3);
+  cv.style.width  = Math.round(OW * s) + 'px';
+  cv.style.height = Math.round(OH * s) + 'px';
+}
+
+function updatePreviewWrapLabel() {
+  document.getElementById('previewWrap').setAttribute('data-res', `${OW} × ${OH} px`);
+}
+
+// ── byte order ──────────────────────────────────────────────────
+function setByteOrder(order) {
+  currentByteOrder = order;
+  document.getElementById('pillVertical').classList.toggle('active',   order==='vertical');
+  document.getElementById('pillHorizontal').classList.toggle('active', order==='horizontal');
+  updateLangLabel(document.getElementById('outputFormat').value);
+  scheduleSave();
+}
+
+// ── code filename ───────────────────────────────────────────────
+function updateCodeFilename() {
+  const name = (document.getElementById('varName').value || 'oled_frames').replace(/[^a-zA-Z0-9_]/g,'_');
+  const fmt  = document.getElementById('outputFormat').value;
+  const ext  = fmt === 'hex_flat' ? '.txt' : '.c';
+  document.getElementById('codeFilenameVar').textContent = name;
+  document.getElementById('codeFilename').innerHTML =
+    `<span id="codeFilenameVar">${name}</span>${ext}`;
+}
+
+// ── playback ────────────────────────────────────────────────────
+let _playTimer = null;
+let _playIdx   = 0;
+let _playing   = false;
+
+function togglePlay() {
+  if (!gifFrames.length) return;
+  _playing = !_playing;
+  document.getElementById('playBtn').textContent = _playing ? '⏸ Pause' : '▶ Play';
+  if (_playing) scheduleNextFrame();
+  else { clearTimeout(_playTimer); _playTimer = null; }
+}
+
+function scheduleNextFrame() {
+  if (!_playing || !gifFrames.length) return;
+  const fpsOverride = parseInt(document.getElementById('fpsOverride').value, 10);
+  const delay = fpsOverride > 0
+    ? Math.round(1000 / fpsOverride)
+    : (gifFrames[_playIdx]?.delay || 100);
+  _playTimer = setTimeout(() => {
+    _playIdx = (_playIdx + 1) % gifFrames.length;
+    const s = document.getElementById('frameSlider');
+    s.value = _playIdx;
+    s.style.setProperty('--fill', (_playIdx / Math.max(s.max, 1) * 100) + '%');
+    document.getElementById('frameVal').textContent = _playIdx;
+    renderFrame(_playIdx);
+    scheduleNextFrame();
+  }, delay);
+}
+
+function updatePlaySpeed() {
+  const fpsOverride = parseInt(document.getElementById('fpsOverride').value, 10);
+  if (fpsOverride > 0) {
+    document.getElementById('fpsDisplay').textContent = fpsOverride + ' fps';
+  } else {
+    const avgDelay = gifFrames.length
+      ? gifFrames.reduce((s, f) => s + (f.delay || 100), 0) / gifFrames.length
+      : 100;
+    document.getElementById('fpsDisplay').textContent = Math.round(1000 / avgDelay) + ' fps';
+  }
+  // Restart ticker if playing
+  if (_playing) { clearTimeout(_playTimer); scheduleNextFrame(); }
+}
 
 function scaleImageData(src, sw, sh, mode) {
   const tc=document.createElement('canvas'); tc.width=OW; tc.height=OH;
@@ -848,6 +1084,13 @@ function flipH(bits){
   return out;
 }
 
+function flipV(bits){
+  const out=new Uint8Array(bits.length);
+  for(let y=0;y<OH;y++) for(let x=0;x<OW;x++)
+    out[(OH-1-y)*OW+x]=bits[y*OW+x];
+  return out;
+}
+
 // SSD1306 vertical addressing: page=row/8, bit=row%8
 function packSSD1306(bits,msb){
   const out=new Uint8Array(OW*OH/8);
@@ -859,6 +1102,32 @@ function packSSD1306(bits,msb){
     }
   }
   return out;
+}
+
+// Horizontal addressing: left-to-right, row-by-row
+function packHorizontal(bits,msb){
+  const out=new Uint8Array(OW*OH/8);
+  for(let y=0;y<OH;y++){
+    for(let x=0;x<OW;x++){
+      const byteIdx=y*(OW/8)+Math.floor(x/8);
+      const bitPos=x%8;
+      const b=bits[y*OW+x]?1:0;
+      out[byteIdx]|=msb?b<<(7-bitPos):b<<bitPos;
+    }
+  }
+  return out;
+}
+
+function packBits(bits){
+  const msb=document.getElementById('msbCheck').checked;
+  return currentByteOrder==='horizontal'
+    ? packHorizontal(bits,msb)
+    : packSSD1306(bits,msb);
+}
+
+function updateLangLabel(fmt){
+  const labels={c_progmem:'C / Arduino',c_ram:'C / RAM',hex_flat:'Hex dump',bin_literal:'Binary'};
+  document.getElementById('codeLangLabel').textContent=labels[fmt]||'C';
 }
 
 function drawBits(bits){
@@ -888,6 +1157,7 @@ function processFrame(imageData){
   else                      bits=threshold(grey,thr);
 
   if(flip) bits=flipH(bits);
+  if(document.getElementById('flipVCheck').checked) bits=flipV(bits);
   if(inv)  bits=bits.map(b=>b^1);
   return bits;
 }
@@ -901,27 +1171,70 @@ function renderCurrentFrame(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  C ARRAY ENCODER
+//  ENCODER  (multiple output formats)
 // ═══════════════════════════════════════════════════════════════
-function encodeToC(allBits){
-  const msb=document.getElementById('msbCheck').checked;
-  const n=allBits.length, bpf=OW*OH/8;
-  let o=`// Auto-generated by OLED GIF Converter\n`;
-  o+=`// ${OW}x${OH} px · ${n} frame${n!==1?'s':''} · ${n*bpf} bytes total\n\n`;
-  o+=`#include <avr/pgmspace.h>\n\n`;
-  o+=`#define OLED_FRAMES      ${n}\n`;
-  o+=`#define OLED_FRAME_BYTES ${bpf}\n\n`;
-  o+=`const uint8_t oled_frames[OLED_FRAMES][OLED_FRAME_BYTES] PROGMEM = {\n`;
-  for(let f=0;f<n;f++){
-    const packed=packSSD1306(allBits[f],msb);
-    const hex=Array.from(packed).map(b=>'0x'+b.toString(16).padStart(2,'0'));
-    const lines=[];
-    for(let i=0;i<hex.length;i+=16) lines.push('    '+hex.slice(i,i+16).join(', '));
-    o+=`  { // frame ${f}\n${lines.join(',\n')}\n  }`;
-    o+=f<n-1?',\n':'\n';
+function encodeOutput(allBits){
+  const fmt    = document.getElementById('outputFormat').value;
+  const name   = (document.getElementById('varName').value||'oled_frames').replace(/[^a-zA-Z0-9_]/g,'_');
+  const msb    = document.getElementById('msbCheck').checked;
+  const order  = currentByteOrder==='horizontal'?'horizontal (row-by-row)':'vertical (SSD1306 pages)';
+  const n      = allBits.length;
+  const bpf    = OW*OH/8;
+
+  updateLangLabel(fmt);
+
+  if(fmt==='c_progmem'||fmt==='c_ram'){
+    const pgmem = fmt==='c_progmem';
+    let o=`// Auto-generated by OLED GIF Converter\n`;
+    o+=`// ${OW}x${OH} px · ${n} frame${n!==1?'s':''} · ${n*bpf} bytes total\n`;
+    o+=`// Byte order: ${order} · Bit order: ${msb?'MSB':'LSB'} first\n\n`;
+    if(pgmem) o+=`#include <avr/pgmspace.h>\n\n`;
+    o+=`#define ${name.toUpperCase()}_FRAMES      ${n}\n`;
+    o+=`#define ${name.toUpperCase()}_FRAME_BYTES ${bpf}\n\n`;
+    const attr = pgmem ? ' PROGMEM' : '';
+    o+=`const uint8_t ${name}[${name.toUpperCase()}_FRAMES][${name.toUpperCase()}_FRAME_BYTES]${attr} = {\n`;
+    for(let f=0;f<n;f++){
+      const packed=packBits(allBits[f]);
+      const hex=Array.from(packed).map(b=>'0x'+b.toString(16).padStart(2,'0'));
+      const lines=[];
+      for(let i=0;i<hex.length;i+=16) lines.push('    '+hex.slice(i,i+16).join(', '));
+      o+=`  { // frame ${f}\n${lines.join(',\n')}\n  }`;
+      o+=f<n-1?',\n':'\n';
+    }
+    o+='};\n';
+    return o;
   }
-  o+='};\n';
-  return o;
+
+  if(fmt==='hex_flat'){
+    let o=`# OLED GIF Converter — hex dump\n`;
+    o+=`# ${OW}x${OH} · ${n} frames · ${order} · ${msb?'MSB':'LSB'} first\n\n`;
+    for(let f=0;f<n;f++){
+      const packed=packBits(allBits[f]);
+      const hex=Array.from(packed).map(b=>b.toString(16).padStart(2,'0'));
+      const lines=[];
+      for(let i=0;i<hex.length;i+=32) lines.push(hex.slice(i,i+32).join(' '));
+      o+=`## frame ${f}\n${lines.join('\n')}\n\n`;
+    }
+    return o;
+  }
+
+  if(fmt==='bin_literal'){
+    let o=`// Binary literal — OLED GIF Converter\n`;
+    o+=`// ${OW}x${OH} · ${n} frames · ${order} · ${msb?'MSB':'LSB'} first\n\n`;
+    o+=`const uint8_t ${name}[${n}][${bpf}] = {\n`;
+    for(let f=0;f<n;f++){
+      const packed=packBits(allBits[f]);
+      const bins=Array.from(packed).map(b=>'0b'+b.toString(2).padStart(8,'0'));
+      const lines=[];
+      for(let i=0;i<bins.length;i+=8) lines.push('    '+bins.slice(i,i+8).join(', '));
+      o+=`  { // frame ${f}\n${lines.join(',\n')}\n  }`;
+      o+=f<n-1?',\n':'\n';
+    }
+    o+='};\n';
+    return o;
+  }
+
+  return '';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -939,7 +1252,7 @@ async function startConvert(){
   }
   setProgress(85,'encoding…');
   await new Promise(r=>setTimeout(r,0));
-  const code=encodeToC(allBits);
+  const code=encodeOutput(allBits);
   setOutputCode(code);
   setStats(gifFrames.length,`${OW}×${OH}`,(gifFrames.length*OW*OH/8)+' B');
   setProgress(100,'done ✓');
@@ -948,12 +1261,18 @@ async function startConvert(){
 }
 
 function resetAll(){
+  // stop playback
+  _playing = false; clearTimeout(_playTimer); _playTimer = null; _playIdx = 0;
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('playBtn').textContent = '▶ Play';
+  document.getElementById('fpsDisplay').textContent = '—';
   gifFrames=[]; gifWidth=0; gifHeight=0;
   document.getElementById('fileInput').value='';
   document.getElementById('fileInfo').classList.remove('visible');
   document.getElementById('previewEmpty').style.display='';
   document.getElementById('previewCanvas').getContext('2d').clearRect(0,0,OW,OH);
   setFrameCount(0); setProgress(0,'idle'); setOutputCode(''); setStats(null,null,null);
+  document.getElementById('statReady').style.color='var(--text-2)';
   showToast('Reset','accent');
 }
 
@@ -975,6 +1294,10 @@ async function handleFile(file){
     setStats(gifFrames.length,`${gifWidth}×${gifHeight}`,'—');
     renderFrame(0);
     setProgress(100,'ready');
+    document.getElementById('playBtn').disabled = gifFrames.length < 2;
+    _playIdx = 0; _playing = false;
+    document.getElementById('playBtn').textContent = '▶ Play';
+    updatePlaySpeed();
     showToast(`Loaded ${gifFrames.length} frame${gifFrames.length!==1?'s':''}`,'green');
   } catch(e){
     setProgress(0,'error');
@@ -995,6 +1318,9 @@ dz.addEventListener('drop',ev=>{ const f=ev.dataTransfer.files[0]; if(f) handleF
 // ═══════════════════════════════════════════════════════════════
 document.getElementById('thresholdSlider').style.setProperty('--fill','50%');
 document.getElementById('frameSlider').style.setProperty('--fill','0%');
+updateCanvasSize();
+updatePreviewWrapLabel();
+updateCodeFilename();
 loadSettings();
 </script>
 </body>
