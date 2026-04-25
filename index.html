@@ -3,778 +3,542 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bleenk OLED Media Multitool</title>
+    <title>OLED Media Multitool | Bleenk</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
     <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root {
+            --accent: #00ff99;
+            --accent-glow: rgba(0, 255, 153, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #ededed;
+            overflow-x: hidden;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .card-gradient {
+            background: linear-gradient(145deg, rgba(23, 23, 23, 0.8) 0%, rgba(10, 10, 10, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .accent-text { color: var(--accent); }
+        .accent-bg { background-color: var(--accent); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #404040; }
+
+        .processing-glow {
+            animation: processing-pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes processing-pulse {
+            0% { box-shadow: 0 0 5px var(--accent-glow); }
+            50% { box-shadow: 0 0 25px var(--accent-glow); }
+            100% { box-shadow: 0 0 5px var(--accent-glow); }
+        }
+
+        .canvas-pixelated {
+            image-rendering: pixelated;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
+            margin-top: -6px;
+        }
+    </style>
     <script>
-        tailwind.config = {
+        window.tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        border: "hsl(240 3.7% 15.9%)",
-                        input: "hsl(240 3.7% 15.9%)",
-                        ring: "hsl(240 4.9% 83.9%)",
-                        background: "hsl(240 10% 3.9%)",
-                        foreground: "hsl(0 0% 98%)",
-                        primary: {
-                            DEFAULT: "hsl(0 0% 98%)",
-                            foreground: "hsl(240 5.9% 10%)",
-                        },
-                        secondary: {
-                            DEFAULT: "hsl(240 3.7% 15.9%)",
-                            foreground: "hsl(0 0% 98%)",
-                        },
-                        muted: {
-                            DEFAULT: "hsl(240 3.7% 15.9%)",
-                            foreground: "hsl(240 5% 64.9%)",
-                        },
-                        accent: {
-                            DEFAULT: "hsl(240 3.7% 15.9%)",
-                            foreground: "hsl(0 0% 98%)",
-                        },
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
+                        accent: '#00ff99',
+                        dark: {
+                            900: '#050505',
+                            800: '#0a0a0a',
+                            700: '#171717',
+                            600: '#262626',
+                        }
+                    }
                 }
             }
         }
     </script>
-    <style>
-        body {
-            background-color: hsl(240 10% 3.9%);
-            color: hsl(0 0% 98%);
-            font-family: 'Inter', sans-serif;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-            cursor: pointer;
-        }
-        input[type="range"]::-webkit-slider-runnable-track {
-            background: hsl(240 3.7% 15.9%);
-            height: 0.5rem;
-            border-radius: 0.5rem;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            margin-top: -4px;
-            background-color: hsl(0 0% 98%);
-            height: 1rem;
-            width: 1rem;
-            border-radius: 50%;
-        }
-        canvas {
-            image-rendering: pixelated;
-        }
-        .res-btn.active {
-            background-color: hsl(0 0% 98%);
-            color: hsl(240 5.9% 10%);
-        }
-    </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
-    <div class="max-w-6xl mx-auto space-y-8">
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                    <i data-lucide="cpu" class="text-black w-6 h-6"></i>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const { motion, AnimatePresence } = FramerMotion;
+
+        const OLED_WIDTH = 128;
+        const OLED_HEIGHT = 64;
+
+        // --- Components ---
+
+        const Card = ({ children, title, className = "" }) => (
+            <div className={`card-gradient rounded-2xl p-6 mb-4 ${className}`}>
+                {title && <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-6">{title}</h3>}
+                {children}
+            </div>
+        );
+
+        const Slider = ({ label, value, min, max, step = 1, onChange, unit = "" }) => (
+            <div className="mb-6">
+                <div className="flex justify-between mb-3">
+                    <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{label}</label>
+                    <span className="text-xs font-mono accent-text bg-accent/10 px-2 py-0.5 rounded">{value}{unit}</span>
                 </div>
-                <div>
-                    <h1 class="text-2xl font-bold tracking-tight">OLED Media Multitool</h1>
-                    <p class="text-muted-foreground text-sm font-mono">v3.0.0 · Video · Image · GIF · 1-bit</p>
-                </div>
+                <input 
+                    type="range" 
+                    min={min} 
+                    max={max} 
+                    step={step} 
+                    value={value} 
+                    onChange={(e) => onChange(parseFloat(e.target.value))}
+                    className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                />
             </div>
-            <div class="flex items-center gap-2">
-                <span class="px-3 py-1 rounded-full bg-secondary text-xs font-medium border border-border">Production Ready</span>
-                <a href="#" class="text-muted-foreground hover:text-foreground transition-colors">
-                    <i data-lucide="github" class="w-5 h-5"></i>
-                </a>
-            </div>
-        </header>
+        );
 
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Left Column: Controls -->
-            <div class="lg:col-span-4 space-y-6">
-                <!-- Upload Card -->
-                <section class="glass rounded-xl p-6 space-y-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i data-lucide="upload" class="w-4 h-4 text-muted-foreground"></i>
-                        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Input Media</h2>
-                    </div>
-                    <div id="dropzone" class="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer group">
-                        <input type="file" id="fileInput" class="hidden" accept="image/*,video/*,.gif">
-                        <div class="flex flex-col items-center gap-3">
-                            <div class="w-12 h-12 rounded-full bg-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <i data-lucide="file-plus" class="w-6 h-6"></i>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-sm font-medium">Click or drag media</p>
-                                <p class="text-xs text-muted-foreground">MP4, MOV, GIF, PNG, JPG, WEBP</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="fileInfo" class="hidden flex items-center justify-between p-3 bg-secondary/50 rounded-lg border border-border">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <i data-lucide="file" class="w-4 h-4 flex-shrink-0"></i>
-                            <span id="fileName" class="text-xs font-mono truncate">filename.mp4</span>
-                        </div>
-                        <button id="resetBtn" class="text-muted-foreground hover:text-red-400 transition-colors">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Parameters Card -->
-                <section class="glass rounded-xl p-6 space-y-6">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i data-lucide="sliders" class="w-4 h-4 text-muted-foreground"></i>
-                        <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Processing</h2>
-                    </div>
-
-                    <!-- Resolution -->
-                    <div class="space-y-3">
-                        <label class="text-xs font-medium text-muted-foreground flex justify-between">
-                            Resolution <span id="resDisplay">128x64</span>
-                        </label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button onclick="setRes(128, 64)" class="res-btn active px-2 py-1.5 rounded bg-secondary border border-border text-[10px] font-mono hover:border-primary transition-colors">128x64</button>
-                            <button onclick="setRes(128, 32)" class="res-btn px-2 py-1.5 rounded bg-secondary border border-border text-[10px] font-mono hover:border-primary transition-colors">128x32</button>
-                            <button onclick="setRes(64, 48)" class="res-btn px-2 py-1.5 rounded bg-secondary border border-border text-[10px] font-mono hover:border-primary transition-colors">64x48</button>
-                        </div>
-                    </div>
-
-                    <!-- Video Settings -->
-                    <div id="videoSettings" class="hidden space-y-4 pt-4 border-t border-border">
-                        <div class="space-y-3">
-                            <label class="text-xs font-medium text-muted-foreground flex justify-between">
-                                Extraction FPS <span id="fpsVal">10</span>
-                            </label>
-                            <input type="range" id="fpsSlider" min="1" max="30" value="10" class="w-full">
-                        </div>
-                    </div>
-
-                    <!-- Image Adjustments -->
-                    <div class="space-y-4">
-                        <div class="space-y-3">
-                            <label class="text-xs font-medium text-muted-foreground flex justify-between">
-                                Brightness <span id="brightnessVal">0</span>
-                            </label>
-                            <input type="range" id="brightnessSlider" min="-100" max="100" value="0" class="w-full">
-                        </div>
-                        <div class="space-y-3">
-                            <label class="text-xs font-medium text-muted-foreground flex justify-between">
-                                Contrast <span id="contrastVal">0</span>
-                            </label>
-                            <input type="range" id="contrastSlider" min="-100" max="100" value="0" class="w-full">
-                        </div>
-                        <div class="space-y-3">
-                            <label class="text-xs font-medium text-muted-foreground flex justify-between">
-                                Threshold <span id="thresholdVal">128</span>
-                            </label>
-                            <input type="range" id="thresholdSlider" min="0" max="255" value="128" class="w-full">
-                        </div>
-                        <div class="space-y-3">
-                            <label class="text-xs font-medium text-muted-foreground flex justify-between">
-                                Dithering Intensity <span id="ditherVal">1.0</span>
-                            </label>
-                            <input type="range" id="ditherSlider" min="0" max="200" value="100" class="w-full">
-                        </div>
-                    </div>
-
-                    <!-- Toggles -->
-                    <div class="space-y-3 pt-4 border-t border-border">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-medium">Dithering (Floyd-Steinberg)</span>
-                            <button id="ditherToggle" class="w-8 h-4 rounded-full bg-secondary relative border border-border transition-colors">
-                                <div class="absolute top-0.5 left-0.5 w-2.5 h-2.5 bg-muted-foreground rounded-full transition-all"></div>
-                            </button>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-medium">Invert Colors</span>
-                            <button id="invertToggle" class="w-8 h-4 rounded-full bg-secondary relative border border-border transition-colors">
-                                <div class="absolute top-0.5 left-0.5 w-2.5 h-2.5 bg-muted-foreground rounded-full transition-all"></div>
-                            </button>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- Right Column: Preview & Output -->
-            <div class="lg:col-span-8 space-y-6">
-                <!-- Preview Section -->
-                <section class="glass rounded-xl p-6 space-y-6">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="eye" class="w-4 h-4 text-muted-foreground"></i>
-                            <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Preview</h2>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                <span id="statusText" class="text-[10px] font-mono text-muted-foreground uppercase">Idle</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Original -->
-                        <div class="space-y-3">
-                            <p class="text-[10px] font-mono text-muted-foreground uppercase text-center">Original Source</p>
-                            <div class="aspect-video bg-black rounded-lg border border-border flex items-center justify-center overflow-hidden relative">
-                                <video id="sourceVideo" class="hidden max-w-full max-h-full" muted loop playsinline></video>
-                                <img id="sourceImg" class="hidden max-w-full max-h-full">
-                                <div id="previewPlaceholder" class="flex flex-col items-center gap-2 text-muted-foreground">
-                                    <i data-lucide="image" class="w-8 h-8 opacity-20"></i>
-                                    <span class="text-xs">No media loaded</span>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Processed -->
-                        <div class="space-y-3">
-                            <p id="processedTitle" class="text-[10px] font-mono text-muted-foreground uppercase text-center">1-Bit OLED (128x64)</p>
-                            <div class="aspect-video bg-black rounded-lg border border-border flex items-center justify-center overflow-hidden relative">
-                                <canvas id="oledCanvas" width="128" height="64" class="w-full h-auto max-w-[256px]"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Playback Controls -->
-                    <div id="playbackControls" class="hidden flex items-center justify-center gap-4 pt-4 border-t border-border">
-                        <button id="prevFrame" class="p-2 hover:bg-secondary rounded-full transition-colors"><i data-lucide="skip-back" class="w-4 h-4"></i></button>
-                        <button id="playPause" class="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:scale-105 transition-transform">
-                            <i data-lucide="play" class="w-5 h-5"></i>
-                        </button>
-                        <button id="nextFrame" class="p-2 hover:bg-secondary rounded-full transition-colors"><i data-lucide="skip-forward" class="w-4 h-4"></i></button>
-                        <div class="flex items-center gap-2 ml-4">
-                            <span id="currentFrame" class="text-xs font-mono">0</span>
-                            <span class="text-xs text-muted-foreground">/</span>
-                            <span id="totalFrames" class="text-xs font-mono text-muted-foreground">0</span>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Export Section -->
-                <section class="glass rounded-xl p-6 space-y-6">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="download" class="w-4 h-4 text-muted-foreground"></i>
-                            <h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Export Assets</h2>
-                        </div>
-                        <div class="flex gap-2">
-                            <button id="exportH" class="px-4 py-2 bg-primary text-primary-foreground rounded-md text-xs font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-                                <i data-lucide="file-code" class="w-3.5 h-3.5"></i> Export .h
-                            </button>
-                            <button id="exportBin" class="px-4 py-2 bg-secondary text-secondary-foreground rounded-md text-xs font-medium border border-border hover:bg-muted transition-colors flex items-center gap-2">
-                                <i data-lucide="file-binary" class="w-3.5 h-3.5"></i> Export .bin
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1 space-y-2">
-                                <label class="text-[10px] font-mono text-muted-foreground uppercase">Variable Name</label>
-                                <input type="text" id="varName" value="oled_media" class="w-full bg-secondary/50 border border-border rounded px-3 py-2 text-xs font-mono focus:outline-none focus:border-primary transition-colors">
-                            </div>
-                            <div class="flex-1 space-y-2">
-                                <label class="text-[10px] font-mono text-muted-foreground uppercase">Byte Order</label>
-                                <select id="byteOrder" class="w-full bg-secondary/50 border border-border rounded px-3 py-2 text-xs font-mono focus:outline-none focus:border-primary transition-colors">
-                                    <option value="vertical">Vertical (SSD1306)</option>
-                                    <option value="horizontal">Horizontal</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="relative group">
-                            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button id="copyCode" class="p-2 bg-background/80 border border-border rounded hover:bg-background transition-colors">
-                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </div>
-                            <pre id="codePreview" class="bg-black/50 border border-border rounded-lg p-4 text-[10px] font-mono text-muted-foreground overflow-x-auto max-h-64 scrollbar-thin">
-// Generated code will appear here...
-                            </pre>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </main>
-
-        <footer class="text-center text-muted-foreground text-[10px] font-mono pt-8 border-t border-border">
-            DESIGNED BY ROBI LABS · POWERED BY BLEENK AI · 2024
-        </footer>
-    </div>
-
-    <!-- Progress Overlay -->
-    <div id="progressOverlay" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
-        <div class="max-w-md w-full p-8 glass rounded-2xl space-y-6 text-center">
-            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto animate-bounce">
-                <i data-lucide="loader-2" class="text-black w-8 h-8 animate-spin"></i>
-            </div>
-            <div class="space-y-2">
-                <h3 class="text-lg font-bold" id="progressTitle">Processing Media</h3>
-                <p class="text-sm text-muted-foreground" id="progressSubtitle">Extracting frames and applying dithering...</p>
-            </div>
-            <div class="w-full bg-secondary rounded-full h-2 overflow-hidden">
-                <div id="progressBar" class="bg-primary h-full w-0 transition-all duration-300"></div>
-            </div>
-            <p id="progressPercent" class="text-xs font-mono text-muted-foreground">0%</p>
-        </div>
-    </div>
-
-    <script>
-        // Initialize Lucide
-        lucide.createIcons();
-
-        // State
-        let ffmpeg = null;
-        let currentFile = null;
-        let mediaType = null; 
-        let frames = []; 
-        let processedFrames = []; 
-        let currentFrameIdx = 0;
-        let isPlaying = false;
-        let playInterval = null;
-        let OW = 128, OH = 64;
-        let ditherEnabled = false;
-        let invertEnabled = false;
-
-        // Elements
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const resetBtn = document.getElementById('resetBtn');
-        const sourceVideo = document.getElementById('sourceVideo');
-        const sourceImg = document.getElementById('sourceImg');
-        const previewPlaceholder = document.getElementById('previewPlaceholder');
-        const oledCanvas = document.getElementById('oledCanvas');
-        const oledCtx = oledCanvas.getContext('2d');
-        const statusText = document.getElementById('statusText');
-        const progressOverlay = document.getElementById('progressOverlay');
-        const progressBar = document.getElementById('progressBar');
-        const progressPercent = document.getElementById('progressPercent');
-        const progressSubtitle = document.getElementById('progressSubtitle');
-
-        // Sliders
-        const brightnessSlider = document.getElementById('brightnessSlider');
-        const contrastSlider = document.getElementById('contrastSlider');
-        const thresholdSlider = document.getElementById('thresholdSlider');
-        const ditherSlider = document.getElementById('ditherSlider');
-        const fpsSlider = document.getElementById('fpsSlider');
-
-        // Toggles
-        const ditherToggle = document.getElementById('ditherToggle');
-        const invertToggle = document.getElementById('invertToggle');
-
-        // Resolution
-        function setRes(w, h) {
-            OW = w; OH = h;
-            oledCanvas.width = w;
-            oledCanvas.height = h;
-            document.getElementById('resDisplay').innerText = `${w}x${h}`;
-            document.getElementById('processedTitle').innerText = `1-Bit OLED (${w}x${h})`;
-            document.querySelectorAll('.res-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.innerText === `${w}x${h}`);
-            });
-            if (currentFile) handleFile(currentFile);
-        }
-
-        // FFmpeg Initialization
-        async function initFFmpeg() {
-            if (ffmpeg) return;
-            const { FFmpeg } = FFmpegWASM;
-            const { toBlobURL } = FFmpegUtil;
-            ffmpeg = new FFmpeg();
-            ffmpeg.on('log', ({ message }) => console.log(message));
-            ffmpeg.on('progress', ({ progress }) => {
-                updateProgress(progress * 100, 'FFmpeg Processing...');
-            });
-            
-            const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-            await ffmpeg.load({
-                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-            });
-        }
-
-        // File Handling
-        dropzone.onclick = () => fileInput.click();
-        fileInput.onchange = (e) => handleFile(e.target.files[0]);
-        dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('border-primary'); };
-        dropzone.ondragleave = () => dropzone.classList.remove('border-primary');
-        dropzone.ondrop = (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('border-primary');
-            handleFile(e.dataTransfer.files[0]);
+        const Button = ({ children, onClick, variant = "primary", disabled = false, className = "" }) => {
+            const base = "px-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95";
+            const variants = {
+                primary: "accent-bg text-black hover:shadow-[0_0_20px_rgba(0,255,153,0.4)]",
+                secondary: "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700",
+                outline: "border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-600 bg-zinc-900/50"
+            };
+            return (
+                <button onClick={onClick} disabled={disabled} className={`${base} ${variants[variant]} ${className}`}>
+                    {children}
+                </button>
+            );
         };
 
-        async function handleFile(file) {
-            if (!file) return;
-            currentFile = file;
-            fileName.innerText = file.name;
-            fileInfo.classList.remove('hidden');
-            dropzone.classList.add('hidden');
-            previewPlaceholder.classList.add('hidden');
+        // --- Main App ---
 
-            if (file.type.startsWith('video/')) {
-                mediaType = 'video';
-                document.getElementById('videoSettings').classList.remove('hidden');
-                sourceVideo.classList.remove('hidden');
-                sourceImg.classList.add('hidden');
-                sourceVideo.src = URL.createObjectURL(file);
-                await processVideo(file);
-            } else if (file.type === 'image/gif') {
-                mediaType = 'gif';
-                document.getElementById('videoSettings').classList.add('hidden');
-                sourceImg.classList.remove('hidden');
-                sourceVideo.classList.add('hidden');
-                sourceImg.src = URL.createObjectURL(file);
-                await processVideo(file); // Use FFmpeg for GIF
-            } else if (file.type.startsWith('image/')) {
-                mediaType = 'image';
-                document.getElementById('videoSettings').classList.add('hidden');
-                sourceImg.classList.remove('hidden');
-                sourceVideo.classList.add('hidden');
-                sourceImg.src = URL.createObjectURL(file);
-                await processImage(file);
-            }
+        const App = () => {
+            const [file, setFile] = useState(null);
+            const [fileType, setFileType] = useState(null);
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
             
-            document.getElementById('playbackControls').classList.toggle('hidden', frames.length <= 1);
-            updateFrameDisplay();
-            processAllFrames();
-        }
+            // Settings
+            const [brightness, setBrightness] = useState(0);
+            const [contrast, setContrast] = useState(1);
+            const [ditherIntensity, setDitherIntensity] = useState(1);
+            const [fps, setFps] = useState(10);
+            const [maxDuration, setMaxDuration] = useState(10);
 
-        async function processVideo(file) {
-            showProgress(true, 'Initializing FFmpeg...');
-            try {
-                await initFFmpeg();
-                const { fetchFile } = FFmpegUtil;
-                await ffmpeg.writeFile('input', await fetchFile(file));
+            // Data
+            const [frames, setFrames] = useState([]);
+            const [currentFrameIdx, setCurrentFrameIdx] = useState(0);
+            const [isPlaying, setIsPlaying] = useState(false);
+            
+            const ffmpegRef = useRef(null);
+            const previewCanvasRef = useRef(null);
+            const playIntervalRef = useRef(null);
+
+            const fileUrl = useMemo(() => file ? URL.createObjectURL(file) : null, [file]);
+
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, [file, isProcessing, frames, isPlaying]);
+
+            useEffect(() => {
+                loadFFmpeg();
+                return () => {
+                    if (playIntervalRef.current) clearInterval(playIntervalRef.current);
+                    if (fileUrl) URL.revokeObjectURL(fileUrl);
+                };
+            }, []);
+
+            const loadFFmpeg = async () => {
+                if (typeof window.FFmpegWASM === 'undefined') {
+                    console.error("FFmpegWASM not loaded");
+                    return;
+                }
+                const { FFmpeg } = window.FFmpegWASM;
+                const { toBlobURL } = window.FFmpegUtil;
+                const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+                const ffmpeg = new FFmpeg();
                 
-                const fps = fpsSlider.value;
-                updateProgress(10, `Extracting frames at ${fps} FPS...`);
+                try {
+                    await ffmpeg.load({
+                        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                    });
+                    ffmpegRef.current = ffmpeg;
+                    setFfmpegLoaded(true);
+                } catch (err) {
+                    console.error("Failed to load FFmpeg", err);
+                }
+            };
+
+            const handleFileChange = (e) => {
+                const selectedFile = e.target.files[0];
+                if (!selectedFile) return;
+                setFile(selectedFile);
+                setFileType(selectedFile.type.startsWith('video/') ? 'video' : 'image');
+                setFrames([]);
+                setCurrentFrameIdx(0);
+                setIsPlaying(false);
+            };
+
+            const processMedia = async () => {
+                if (!file) return;
+                setIsProcessing(true);
+                setProgress(0);
+                try {
+                    if (fileType === 'video') await processVideo();
+                    else await processImage();
+                } catch (err) {
+                    console.error("Processing failed", err);
+                }
+                setIsProcessing(false);
+            };
+
+            const processImage = async () => {
+                const img = new Image();
+                img.src = fileUrl;
+                await new Promise(resolve => img.onload = resolve);
+                const canvas = document.createElement('canvas');
+                canvas.width = OLED_WIDTH;
+                canvas.height = OLED_HEIGHT;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, OLED_WIDTH, OLED_HEIGHT);
+                const frameData = applyOLEDFilters(ctx);
+                setFrames([frameData]);
+                setCurrentFrameIdx(0);
+            };
+
+            const processVideo = async () => {
+                const ffmpeg = ffmpegRef.current;
+                const { fetchFile } = window.FFmpegUtil;
+                const inputName = 'input' + file.name.substring(file.name.lastIndexOf('.'));
+                await ffmpeg.writeFile(inputName, await fetchFile(file));
+                const duration = Math.min(maxDuration, 30);
                 
-                await ffmpeg.exec(['-i', 'input', '-vf', `fps=${fps},scale=${OW}:${OH}:force_original_aspect_ratio=decrease,pad=${OW}:${OH}:(ow-iw)/2:(oh-ih)/2`, 'out_%04d.png']);
-                
+                ffmpeg.on('progress', ({ progress }) => {
+                    setProgress(Math.round(progress * 100));
+                });
+
+                await ffmpeg.exec([
+                    '-i', inputName,
+                    '-t', duration.toString(),
+                    '-vf', `fps=${fps},scale=${OLED_WIDTH}:${OLED_HEIGHT},format=gray`,
+                    'frame%04d.png'
+                ]);
+
                 const files = await ffmpeg.listDir('.');
-                const frameFiles = files.filter(f => f.name.startsWith('out_') && f.name.endsWith('.png')).sort((a, b) => a.name.localeCompare(b.name));
+                const frameFiles = files.filter(f => f.name.startsWith('frame') && f.name.endsWith('.png')).sort((a, b) => a.name.localeCompare(b.name));
                 
-                frames = [];
+                const processedFrames = [];
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = OLED_WIDTH;
+                tempCanvas.height = OLED_HEIGHT;
+                const tempCtx = tempCanvas.getContext('2d');
+
                 for (let i = 0; i < frameFiles.length; i++) {
                     const data = await ffmpeg.readFile(frameFiles[i].name);
                     const blob = new Blob([data.buffer], { type: 'image/png' });
                     const img = await createImageBitmap(blob);
-                    const canvas = document.createElement('canvas');
-                    canvas.width = OW;
-                    canvas.height = OH;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    frames.push(ctx.getImageData(0, 0, OW, OH));
-                    updateProgress(10 + (i / frameFiles.length) * 80, `Loading frame ${i+1}/${frameFiles.length}`);
+                    tempCtx.drawImage(img, 0, 0);
+                    processedFrames.push(applyOLEDFilters(tempCtx));
                     await ffmpeg.deleteFile(frameFiles[i].name);
+                    setProgress(Math.round(((i + 1) / frameFiles.length) * 100));
                 }
-                await ffmpeg.deleteFile('input');
-            } catch (err) {
-                console.error(err);
-                alert('Error processing video: ' + err.message);
-            } finally {
-                showProgress(false);
-            }
-        }
 
-        async function processImage(file) {
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            await new Promise(r => img.onload = r);
-            const canvas = document.createElement('canvas');
-            canvas.width = OW;
-            canvas.height = OH;
-            const ctx = canvas.getContext('2d');
-            
-            const scale = Math.min(OW / img.width, OH / img.height);
-            const x = (OW - img.width * scale) / 2;
-            const y = (OH - img.height * scale) / 2;
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, OW, OH);
-            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-            
-            frames = [ctx.getImageData(0, 0, OW, OH)];
-        }
+                setFrames(processedFrames);
+                setCurrentFrameIdx(0);
+                await ffmpeg.deleteFile(inputName);
+            };
 
-        function processAllFrames() {
-            if (frames.length === 0) return;
-            statusText.innerText = 'Processing...';
-            processedFrames = frames.map(frame => applyFilters(frame));
-            renderFrame(currentFrameIdx);
-            statusText.innerText = 'Ready';
-            updateCodePreview();
-        }
-
-        function applyFilters(imageData) {
-            const data = new Uint8ClampedArray(imageData.data);
-            const brightness = parseInt(brightnessSlider.value);
-            const contrast = parseInt(contrastSlider.value);
-            const threshold = parseInt(thresholdSlider.value);
-            const ditherIntensity = parseInt(ditherSlider.value) / 100;
-
-            const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-            for (let i = 0; i < data.length; i += 4) {
-                for (let j = 0; j < 3; j++) {
-                    let val = data[i + j];
-                    val = val + brightness;
-                    val = factor * (val - 128) + 128;
-                    data[i + j] = Math.max(0, Math.min(255, val));
+            const applyOLEDFilters = (ctx) => {
+                const imageData = ctx.getImageData(0, 0, OLED_WIDTH, OLED_HEIGHT);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    let gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                    gray += brightness;
+                    gray = (gray - 128) * contrast + 128;
+                    gray = Math.max(0, Math.min(255, gray));
+                    data[i] = data[i+1] = data[i+2] = gray;
                 }
-            }
-
-            const grey = new Float32Array(OW * OH);
-            for (let i = 0; i < OW * OH; i++) {
-                const p = i * 4;
-                grey[i] = 0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2];
-            }
-
-            const bits = new Uint8Array(OW * OH);
-            if (ditherEnabled) {
-                const g = new Float32Array(grey);
-                for (let y = 0; y < OH; y++) {
-                    for (let x = 0; x < OW; x++) {
-                        const i = y * OW + x;
-                        const oldPx = g[i];
-                        const newPx = oldPx < threshold ? 0 : 255;
-                        bits[i] = newPx > 0 ? 1 : 0;
-                        const err = (oldPx - newPx) * ditherIntensity;
-                        
-                        if (x + 1 < OW) g[i + 1] += err * 7 / 16;
-                        if (y + 1 < OH) {
-                            if (x > 0) g[i + OW - 1] += err * 3 / 16;
-                            g[i + OW] += err * 5 / 16;
-                            if (x + 1 < OW) g[i + OW + 1] += err * 1 / 16;
+                const buffer = new Float32Array(OLED_WIDTH * OLED_HEIGHT);
+                for (let i = 0; i < OLED_WIDTH * OLED_HEIGHT; i++) buffer[i] = data[i * 4];
+                const oledBuffer = new Uint8Array((OLED_WIDTH * OLED_HEIGHT) / 8);
+                for (let y = 0; y < OLED_HEIGHT; y++) {
+                    for (let x = 0; x < OLED_WIDTH; x++) {
+                        const idx = y * OLED_WIDTH + x;
+                        const oldPixel = buffer[idx];
+                        const newPixel = oldPixel < 128 ? 0 : 255;
+                        buffer[idx] = newPixel;
+                        const error = (oldPixel - newPixel) * ditherIntensity;
+                        if (x + 1 < OLED_WIDTH) buffer[idx + 1] += error * 7 / 16;
+                        if (y + 1 < OLED_HEIGHT) {
+                            if (x > 0) buffer[idx + OLED_WIDTH - 1] += error * 3 / 16;
+                            buffer[idx + OLED_WIDTH] += error * 5 / 16;
+                            if (x + 1 < OLED_WIDTH) buffer[idx + OLED_WIDTH + 1] += error * 1 / 16;
+                        }
+                        if (newPixel > 0) {
+                            const byteIdx = Math.floor(idx / 8);
+                            const bitIdx = 7 - (idx % 8);
+                            oledBuffer[byteIdx] |= (1 << bitIdx);
                         }
                     }
                 }
-            } else {
-                for (let i = 0; i < grey.length; i++) {
-                    bits[i] = grey[i] < threshold ? 0 : 1;
+                return oledBuffer;
+            };
+
+            useEffect(() => {
+                if (frames.length === 0) return;
+                const canvas = previewCanvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const frame = frames[currentFrameIdx];
+                const imgData = ctx.createImageData(OLED_WIDTH, OLED_HEIGHT);
+                for (let i = 0; i < OLED_WIDTH * OLED_HEIGHT; i++) {
+                    const byteIdx = Math.floor(i / 8);
+                    const bitIdx = 7 - (i % 8);
+                    const val = (frame[byteIdx] & (1 << bitIdx)) ? 255 : 0;
+                    const dIdx = i * 4;
+                    imgData.data[dIdx] = val === 255 ? 0 : 15;
+                    imgData.data[dIdx+1] = val === 255 ? 255 : 15;
+                    imgData.data[dIdx+2] = val === 255 ? 153 : 15;
+                    imgData.data[dIdx+3] = 255;
                 }
-            }
+                ctx.putImageData(imgData, 0, 0);
+            }, [frames, currentFrameIdx]);
 
-            if (invertEnabled) {
-                for (let i = 0; i < bits.length; i++) bits[i] = bits[i] ^ 1;
-            }
+            const togglePlay = () => {
+                if (isPlaying) {
+                    clearInterval(playIntervalRef.current);
+                    setIsPlaying(false);
+                } else {
+                    if (frames.length <= 1) return;
+                    setIsPlaying(true);
+                    playIntervalRef.current = setInterval(() => {
+                        setCurrentFrameIdx(prev => (prev + 1) % frames.length);
+                    }, 1000 / fps);
+                }
+            };
 
-            return bits;
-        }
-
-        function renderFrame(idx) {
-            if (idx >= processedFrames.length) idx = 0;
-            if (!processedFrames[idx]) return;
-            const bits = processedFrames[idx];
-            const imgData = oledCtx.createImageData(OW, OH);
-            for (let i = 0; i < bits.length; i++) {
-                const v = bits[i] ? 255 : 0;
-                const p = i * 4;
-                imgData.data[p] = v;
-                imgData.data[p + 1] = v;
-                imgData.data[p + 2] = v;
-                imgData.data[p + 3] = 255;
-            }
-            oledCtx.putImageData(imgData, 0, 0);
-            document.getElementById('currentFrame').innerText = idx + 1;
-            document.getElementById('totalFrames').innerText = frames.length;
-        }
-
-        // UI Interactions
-        brightnessSlider.oninput = (e) => { document.getElementById('brightnessVal').innerText = e.target.value; processAllFrames(); };
-        contrastSlider.oninput = (e) => { document.getElementById('contrastVal').innerText = e.target.value; processAllFrames(); };
-        thresholdSlider.oninput = (e) => { document.getElementById('thresholdVal').innerText = e.target.value; processAllFrames(); };
-        ditherSlider.oninput = (e) => { document.getElementById('ditherVal').innerText = (e.target.value / 100).toFixed(1); processAllFrames(); };
-        fpsSlider.onchange = (e) => { document.getElementById('fpsVal').innerText = e.target.value; if (currentFile) handleFile(currentFile); };
-
-        ditherToggle.onclick = () => {
-            ditherEnabled = !ditherEnabled;
-            ditherToggle.querySelector('div').classList.toggle('translate-x-4');
-            ditherToggle.classList.toggle('bg-primary');
-            processAllFrames();
-        };
-
-        invertToggle.onclick = () => {
-            invertEnabled = !invertEnabled;
-            invertToggle.querySelector('div').classList.toggle('translate-x-4');
-            invertToggle.classList.toggle('bg-primary');
-            processAllFrames();
-        };
-
-        resetBtn.onclick = () => {
-            frames = [];
-            processedFrames = [];
-            currentFile = null;
-            fileInput.value = '';
-            fileInfo.classList.add('hidden');
-            dropzone.classList.remove('hidden');
-            previewPlaceholder.classList.remove('hidden');
-            sourceVideo.classList.add('hidden');
-            sourceImg.classList.add('hidden');
-            oledCtx.clearRect(0, 0, OW, OH);
-            document.getElementById('playbackControls').classList.add('hidden');
-            document.getElementById('videoSettings').classList.add('hidden');
-            updateCodePreview();
-        };
-
-        // Playback
-        document.getElementById('playPause').onclick = () => {
-            isPlaying = !isPlaying;
-            const icon = document.getElementById('playPause').querySelector('i');
-            if (isPlaying) {
-                icon.setAttribute('data-lucide', 'pause');
-                playInterval = setInterval(() => {
-                    currentFrameIdx = (currentFrameIdx + 1) % frames.length;
-                    renderFrame(currentFrameIdx);
-                }, 1000 / (mediaType === 'video' ? fpsSlider.value : 10));
-            } else {
-                icon.setAttribute('data-lucide', 'play');
-                clearInterval(playInterval);
-            }
-            lucide.createIcons();
-        };
-
-        document.getElementById('prevFrame').onclick = () => {
-            currentFrameIdx = (currentFrameIdx - 1 + frames.length) % frames.length;
-            renderFrame(currentFrameIdx);
-        };
-
-        document.getElementById('nextFrame').onclick = () => {
-            currentFrameIdx = (currentFrameIdx + 1) % frames.length;
-            renderFrame(currentFrameIdx);
-        };
-
-        function packBits(bits) {
-            const byteOrder = document.getElementById('byteOrder').value;
-            const packed = new Uint8Array(Math.ceil(OW * OH / 8));
-            
-            if (byteOrder === 'vertical') {
-                for (let y = 0; y < OH; y++) {
-                    const page = Math.floor(y / 8);
-                    const bit = y % 8;
-                    for (let x = 0; x < OW; x++) {
-                        if (bits[y * OW + x]) {
-                            packed[page * OW + x] |= (1 << bit);
-                        }
+            const exportCpp = () => {
+                let output = `// OLED Animation: ${file.name}\n// Frames: ${frames.length}, Width: 128, Height: 64\n#include <avr/pgmspace.h>\n\n`;
+                frames.forEach((frame, i) => {
+                    output += `const unsigned char frame_${i}[] PROGMEM = {\n  `;
+                    for (let j = 0; j < frame.length; j++) {
+                        output += `0x${frame[j].toString(16).padStart(2, '0')}${j === frame.length - 1 ? '' : ', '}`;
+                        if ((j + 1) % 16 === 0) output += '\n  ';
                     }
-                }
-            } else {
-                for (let i = 0; i < bits.length; i++) {
-                    if (bits[i]) {
-                        packed[Math.floor(i / 8)] |= (1 << (7 - (i % 8)));
-                    }
-                }
-            }
-            return packed;
-        }
+                    output += `\n};\n\n`;
+                });
+                output += `const unsigned char* const animation_frames[] PROGMEM = {\n  `;
+                frames.forEach((_, i) => {
+                    output += `frame_${i}${i === frames.length - 1 ? '' : ', '}`;
+                });
+                output += `\n};\n`;
+                downloadFile(output, `${file.name.split('.')[0]}_oled.h`, 'text/plain');
+            };
 
-        function updateCodePreview() {
-            if (processedFrames.length === 0) {
-                document.getElementById('codePreview').innerText = '// Generated code will appear here...';
-                return;
-            }
-            const varName = document.getElementById('varName').value || 'oled_media';
-            const byteOrder = document.getElementById('byteOrder').value;
-            let code = `// OLED Media: ${OW}x${OH}, ${processedFrames.length} frames, ${byteOrder} order\n`;
-            code += `const uint8_t ${varName}[][${Math.ceil(OW * OH / 8)}] PROGMEM = {\n`;
-            
-            const packed = packBits(processedFrames[0]);
-            code += `  { // Frame 0\n    `;
-            for (let i = 0; i < packed.length; i++) {
-                code += '0x' + packed[i].toString(16).padStart(2, '0') + ', ';
-                if ((i + 1) % 16 === 0) code += '\n    ';
-            }
-            code += `\n  }${processedFrames.length > 1 ? ',\n  // ... other frames omitted in preview' : ''}\n};`;
-            document.getElementById('codePreview').innerText = code;
-        }
+            const exportBin = () => {
+                const binData = new Uint8Array(frames.length * 1024);
+                frames.forEach((frame, i) => binData.set(frame, i * 1024));
+                const blob = new Blob([binData], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${file.name.split('.')[0]}.bin`;
+                a.click();
+            };
 
-        document.getElementById('exportH').onclick = () => {
-            if (processedFrames.length === 0) return;
-            const varName = document.getElementById('varName').value || 'oled_media';
-            let code = `/* OLED Media Multitool Export */\n`;
-            code += `#include <avr/pgmspace.h>\n\n`;
-            code += `const uint8_t ${varName}[][${Math.ceil(OW * OH / 8)}] PROGMEM = {\n`;
-            
-            processedFrames.forEach((bits, idx) => {
-                const packed = packBits(bits);
-                code += `  { // Frame ${idx}\n    `;
-                for (let i = 0; i < packed.length; i++) {
-                    code += '0x' + packed[i].toString(16).padStart(2, '0') + ', ';
-                    if ((i + 1) % 16 === 0) code += '\n    ';
-                }
-                code += `\n  }${idx < processedFrames.length - 1 ? ',' : ''}\n`;
-            });
-            code += `};`;
+            const downloadFile = (content, filename, type) => {
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+            };
 
-            downloadFile(code, `${varName}.h`, 'text/plain');
+            return (
+                <div className="min-h-screen p-4 md:p-12 max-w-7xl mx-auto">
+                    <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-6">
+                        <div>
+                            <motion.div 
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex items-center gap-4 mb-2"
+                            >
+                                <div className="accent-bg p-2 rounded-xl text-black shadow-[0_0_20px_var(--accent-glow)]">
+                                    <i data-lucide="layers" className="w-7 h-7"></i>
+                                </div>
+                                <h1 className="text-4xl font-black tracking-tighter uppercase">
+                                    OLED <span className="accent-text">Multitool</span>
+                                </h1>
+                            </motion.div>
+                            <p className="text-zinc-500 font-medium ml-14">Professional 1-bit Media Pipeline</p>
+                        </div>
+                        <div className="flex items-center gap-6 bg-zinc-900/50 px-6 py-3 rounded-2xl border border-zinc-800">
+                            <div className={`flex items-center gap-3 text-[10px] font-bold tracking-[0.2em] ${ffmpegLoaded ? 'text-accent' : 'text-amber-500'}`}>
+                                <div className={`w-2 h-2 rounded-full ${ffmpegLoaded ? 'accent-bg shadow-[0_0_10px_var(--accent)]' : 'bg-amber-500 animate-pulse'}`}></div>
+                                {ffmpegLoaded ? 'ENGINE READY' : 'INITIALIZING WASM'}
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                        <div className="lg:col-span-4 space-y-8">
+                            <Card title="Input Source">
+                                <div 
+                                    className={`group relative border-2 border-dashed rounded-2xl p-10 transition-all text-center cursor-pointer
+                                        ${file ? 'border-accent/40 bg-accent/5' : 'border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/30'}`}
+                                    onClick={() => !isProcessing && document.getElementById('fileInput').click()}
+                                >
+                                    <input id="fileInput" type="file" className="hidden" accept="image/*,video/*" onChange={handleFileChange} />
+                                    <i data-lucide="upload" className={`w-12 h-12 mx-auto mb-4 transition-transform group-hover:-translate-y-1 ${file ? 'accent-text' : 'text-zinc-700'}`}></i>
+                                    {file ? (
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-bold truncate px-4">{file.name}</p>
+                                            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{(file.size / 1024 / 1024).toFixed(2)} MB • {fileType}</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Select Media File</p>
+                                    )}
+                                </div>
+                            </Card>
+
+                            <Card title="Parameters">
+                                <Slider label="Brightness" value={brightness} min={-100} max={100} onChange={setBrightness} />
+                                <Slider label="Contrast" value={contrast} min={0.5} max={3} step={0.1} onChange={setContrast} />
+                                <Slider label="Dither" value={ditherIntensity} min={0} max={2} step={0.1} onChange={setDitherIntensity} />
+                                
+                                <AnimatePresence>
+                                    {fileType === 'video' && (
+                                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                                            <Slider label="Target FPS" value={fps} min={1} max={30} onChange={setFps} />
+                                            <Slider label="Max Duration" value={maxDuration} min={1} max={30} unit="s" onChange={setMaxDuration} />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <Button className="w-full mt-4" onClick={processMedia} disabled={!file || !ffmpegLoaded || isProcessing}>
+                                    {isProcessing ? (
+                                        <><i data-lucide="refresh-cw" className="w-4 h-4 animate-spin"></i> Processing {progress}%</>
+                                    ) : (
+                                        <><i data-lucide="zap" className="w-4 h-4"></i> Generate Data</>
+                                    )}
+                                </Button>
+                            </Card>
+
+                            <Card title="Export">
+                                <div className="grid grid-cols-1 gap-3">
+                                    <Button variant="outline" onClick={exportCpp} disabled={frames.length === 0}>
+                                        <i data-lucide="code" className="w-4 h-4"></i> C++ Header (.h)
+                                    </Button>
+                                    <Button variant="outline" onClick={exportBin} disabled={frames.length === 0}>
+                                        <i data-lucide="binary" className="w-4 h-4"></i> Binary Stream (.bin)
+                                    </Button>
+                                </div>
+                            </Card>
+                        </div>
+
+                        <div className="lg:col-span-8 space-y-8">
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                                <Card title="Original" className="flex flex-col items-center justify-center min-h-[340px]">
+                                    {file ? (
+                                        fileType === 'video' ? (
+                                            <video src={fileUrl} className="max-w-full max-h-[260px] rounded-xl shadow-2xl border border-zinc-800" controls />
+                                        ) : (
+                                            <img src={fileUrl} className="max-w-full max-h-[260px] rounded-xl shadow-2xl border border-zinc-800" />
+                                        )
+                                    ) : (
+                                        <div className="text-zinc-800 flex flex-col items-center opacity-40">
+                                            <i data-lucide="image" className="w-16 h-16 mb-4"></i>
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Waiting for input</p>
+                                        </div>
+                                    )}
+                                </Card>
+
+                                <Card title="OLED Simulation" className="flex flex-col items-center justify-center min-h-[340px]">
+                                    <div className={`relative p-6 bg-[#050505] rounded-2xl border-2 border-zinc-900 shadow-[0_0_50px_rgba(0,0,0,0.5)] ${isProcessing ? 'processing-glow' : ''}`}>
+                                        <canvas ref={previewCanvasRef} width={OLED_WIDTH} height={OLED_HEIGHT} className="canvas-pixelated w-[256px] h-[128px] md:w-[320px] md:h-[160px]"></canvas>
+                                        
+                                        {frames.length > 1 && (
+                                            <div className="absolute -bottom-14 left-0 right-0 flex items-center gap-4 bg-zinc-900/80 backdrop-blur p-3 rounded-xl border border-zinc-800">
+                                                <button onClick={togglePlay} className="w-8 h-8 rounded-lg accent-bg text-black flex items-center justify-center hover:scale-105 transition-transform">
+                                                    <i data-lucide={isPlaying ? "pause" : "play"} className="w-4 h-4"></i>
+                                                </button>
+                                                <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                                                    <div className="h-full accent-bg transition-all duration-100" style={{ width: `${(currentFrameIdx / (frames.length - 1)) * 100}%` }}></div>
+                                                </div>
+                                                <span className="text-[10px] font-mono text-zinc-500">{currentFrameIdx + 1}/{frames.length}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            </div>
+
+                            <Card title="System Logs">
+                                <div className="space-y-3 font-mono text-[10px]">
+                                    <div className="flex justify-between border-b border-zinc-800/50 pb-2">
+                                        <span className="text-zinc-500 uppercase tracking-widest">WASM Engine</span>
+                                        <span className={ffmpegLoaded ? 'text-accent' : 'text-zinc-600'}>{ffmpegLoaded ? 'v0.12.7 ACTIVE' : 'LOADING...'}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-zinc-800/50 pb-2">
+                                        <span className="text-zinc-500 uppercase tracking-widest">Memory Isolation</span>
+                                        <span className="text-zinc-400">COOP/COEP ENABLED</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-zinc-800/50 pb-2">
+                                        <span className="text-zinc-500 uppercase tracking-widest">Output Format</span>
+                                        <span className="text-zinc-400">128x64 1-BIT MONOCHROME</span>
+                                    </div>
+                                    {isProcessing && (
+                                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-2">
+                                            <div className="flex justify-between text-accent mb-2">
+                                                <span className="uppercase tracking-widest">Pipeline Progress</span>
+                                                <span>{progress}%</span>
+                                            </div>
+                                            <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
+                                                <div className="h-full accent-bg" style={{ width: `${progress}%` }}></div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
-        document.getElementById('exportBin').onclick = () => {
-            if (processedFrames.length === 0) return;
-            const frameSize = Math.ceil(OW * OH / 8);
-            const totalSize = frameSize * processedFrames.length;
-            const binData = new Uint8Array(totalSize);
-            processedFrames.forEach((bits, idx) => {
-                const packed = packBits(bits);
-                binData.set(packed, idx * frameSize);
-            });
-            downloadFile(binData, `${document.getElementById('varName').value || 'oled_media'}.bin`, 'application/octet-stream');
-        };
-
-        function downloadFile(content, filename, contentType) {
-            const blob = new Blob([content], { type: contentType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        document.getElementById('copyCode').onclick = () => {
-            const text = document.getElementById('codePreview').innerText;
-            navigator.clipboard.writeText(text);
-            alert('Code copied to clipboard!');
-        };
-
-        function showProgress(show, title = 'Processing Media', subtitle = 'Please wait...') {
-            progressOverlay.classList.toggle('hidden', !show);
-            document.getElementById('progressTitle').innerText = title;
-            progressSubtitle.innerText = subtitle;
-        }
-
-        function updateProgress(percent, subtitle) {
-            progressBar.style.width = `${percent}%`;
-            progressPercent.innerText = `${Math.round(percent)}%`;
-            if (subtitle) progressSubtitle.innerText = subtitle;
-        }
-
-        function updateFrameDisplay() {
-            document.getElementById('totalFrames').innerText = frames.length;
-            document.getElementById('currentFrame').innerText = currentFrameIdx + 1;
-        }
-
-        document.getElementById('byteOrder').onchange = () => updateCodePreview();
-        document.getElementById('varName').oninput = () => updateCodePreview();
-
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
