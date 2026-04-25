@@ -1,0 +1,10 @@
+--- package.json
++++ package.json
+@@ -5,6 +5,7 @@
+   \"main\": \"server.js\",
+   \"scripts\": {\n    \"start\": \"node server.js\",
++    \"dev\": \"node server.js\",
+     \"build\": \"echo 'No build step required'\"\n   },\n   \"dependencies\": {
+ 
+ 
+ 
