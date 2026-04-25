@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLED Media Multitool | Bleenk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root {
+            --accent: #00ff99;
+            --accent-glow: rgba(0, 255, 153, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #ededed;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .glass {
+            background: rgba(23, 23, 23, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .accent-border {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .accent-text { color: var(--accent); }
+        .accent-bg { background-color: var(--accent); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #404040; }
+
+        .glow-pulse {
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 5px var(--accent-glow); }
+            to { box-shadow: 0 0 20px var(--accent-glow); }
+        }
+
+        .canvas-pixelated {
+            image-rendering: pixelated;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#00ff99',
+                        dark: {
+                            900: '#050505',
+                            800: '#0a0a0a',
+                            700: '#171717',
+                            600: '#262626',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const { motion, AnimatePresence } = FramerMotion;
+
+        const OLED_WIDTH = 128;
+        const OLED_HEIGHT = 64;
+
+        // --- Components ---
+
+        const Card = ({ children, title, className = "" }) => (
+            <div className={`glass rounded-xl p-5 mb-4 ${className}`}>
+                {title && <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500 mb-4">{title}</h3>}
+                {children}
+            </div>
+        );
+
+        const Slider = ({ label, value, min, max, step = 1, onChange, unit = "" }) => (
+            <div className="mb-4">
+                <div className="flex justify-between mb-2">
+                    <label className="text-sm font-medium text-zinc-400">{label}</label>
+                    <span className="text-sm font-mono accent-text">{value}{unit}</span>
+                </div>
+                <input 
+                    type="range" 
+                    min={min} 
+                    max={max} 
+                    step={step} 
+                    value={value} 
+                    onChange={(e) => onChange(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-bg"
+                />
+            </div>
+        );
+
+        const Button = ({ children, onClick, variant = "primary", disabled = false, className = "" }) => {
+            const base = "px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+            const variants = {
+                primary: "accent-bg text-black hover:opacity-90",
+                secondary: "bg-zinc-800 text-white hover:bg-zinc-700",
+                outline: "border border-zinc-700 text-zinc-300 hover:border-zinc-500"
+            };
+            return (
+                <button onClick={onClick} disabled={disabled} className={`${base} ${variants[variant]} ${className}`}>
+                    {children}
+                </button>
+            );
+        };
+
+        // --- Main App ---
+
+        const App = () => {
+            const [file, setFile] = useState(null);
+            const [fileType, setFileType] = useState(null); // 'image' or 'video'
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
+            
+            // Settings
+            const [brightness, setBrightness] = useState(0);
+            const [contrast, setContrast] = useState(1);
+            const [ditherIntensity, setDitherIntensity] = useState(1);
+            const [fps, setFps] = useState(10);
+            const [maxDuration, setMaxDuration] = useState(10);
+
+            // Data
+            const [frames, setFrames] = useState([]); // Array of Uint8Array (1024 bytes each)
+            const [currentFrameIdx, setCurrentFrameIdx] = useState(0);
+            const [isPlaying, setIsPlaying] = useState(false);
+            
+            const ffmpegRef = useRef(null);
+            const videoRef = useRef(null);
+            const canvasRef = useRef(null);
+            const previewCanvasRef = useRef(null);
+            const playIntervalRef = useRef(null);
+
+            useEffect(() => {
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }, [file, isProcessing, frames, isPlaying]);
+
+            useEffect(() => {
+                loadFFmpeg();
+                return () => clearInterval(playIntervalRef.current);
+            }, []);
+
+            const loadFFmpeg = async () => {
+                const { FFmpeg } = FFmpegWASM;
+                const { toBlobURL } = FFmpegUtil;
+                const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+                const ffmpeg = new FFmpeg();
+                
+                ffmpeg.on('log', ({ message }) => {
+                    console.log(message);
+                });
+
+                ffmpeg.on('progress', ({ progress }) => {
+                    setProgress(Math.round(progress * 100));
+                });
+
+                try {
+                    await ffmpeg.load({
+                        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                    });
+                    ffmpegRef.current = ffmpeg;
+                    setFfmpegLoaded(true);
+                } catch (err) {
+                    console.error("Failed to load FFmpeg", err);
+                }
+            };
+
+            const handleFileChange = (e) => {
+                const selectedFile = e.target.files[0];
+                if (!selectedFile) return;
+
+                setFile(selectedFile);
+                setFileType(selectedFile.type.startsWith('video/') ? 'video' : 'image');
+                setFrames([]);
+                setCurrentFrameIdx(0);
+                setIsPlaying(false);
+            };
+
+            const processMedia = async () => {
+                if (!file) return;
+                setIsProcessing(true);
+                setProgress(0);
+
+                if (fileType === 'video') {
+                    await processVideo();
+                } else {
+                    await processImage();
+                }
+
+                setIsProcessing(false);
+            };
+
+            const processImage = async () => {
+                const img = new Image();
+                img.src = URL.createObjectURL(file);
+                await new Promise(resolve => img.onload = resolve);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = OLED_WIDTH;
+                canvas.height = OLED_HEIGHT;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw and scale
+                ctx.drawImage(img, 0, 0, OLED_WIDTH, OLED_HEIGHT);
+                
+                const frameData = applyOLEDFilters(ctx);
+                setFrames([frameData]);
+                setCurrentFrameIdx(0);
+            };
+
+            const processVideo = async () => {
+                const ffmpeg = ffmpegRef.current;
+                const { fetchFile } = FFmpegUtil;
+                
+                const inputName = 'input' + file.name.substring(file.name.lastIndexOf('.'));
+                await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+                // Extract frames
+                // Limit duration to 30s as per requirements, or user setting
+                const duration = Math.min(maxDuration, 30);
+                
+                // Command: ffmpeg -i input -t duration -vf "fps=fps,scale=128:64,format=gray" frame%04d.png
+                await ffmpeg.exec([
+                    '-i', inputName,
+                    '-t', duration.toString(),
+                    '-vf', `fps=${fps},scale=${OLED_WIDTH}:${OLED_HEIGHT},format=gray`,
+                    'frame%04d.png'
+                ]);
+
+                const files = await ffmpeg.listDir('.');
+                const frameFiles = files.filter(f => f.name.startsWith('frame') && f.name.endsWith('.png')).sort((a, b) => a.name.localeCompare(b.name));
+                
+                const processedFrames = [];
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = OLED_WIDTH;
+                tempCanvas.height = OLED_HEIGHT;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                for (let i = 0; i < frameFiles.length; i++) {
+                    const data = await ffmpeg.readFile(frameFiles[i].name);
+                    const blob = new Blob([data.buffer], { type: 'image/png' });
+                    const img = await createImageBitmap(blob);
+                    
+                    tempCtx.drawImage(img, 0, 0);
+                    processedFrames.push(applyOLEDFilters(tempCtx));
+                    
+                    // Cleanup
+                    await ffmpeg.deleteFile(frameFiles[i].name);
+                    setProgress(Math.round(((i + 1) / frameFiles.length) * 100));
+                }
+
+                setFrames(processedFrames);
+                setCurrentFrameIdx(0);
+                await ffmpeg.deleteFile(inputName);
+            };
+
+            const applyOLEDFilters = (ctx) => {
+                const imageData = ctx.getImageData(0, 0, OLED_WIDTH, OLED_HEIGHT);
+                const data = imageData.data;
+
+                // 1. Grayscale, Brightness, Contrast
+                for (let i = 0; i < data.length; i += 4) {
+                    let gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                    
+                    // Brightness
+                    gray += brightness;
+                    
+                    // Contrast
+                    gray = (gray - 128) * contrast + 128;
+                    
+                    gray = Math.max(0, Math.min(255, gray));
+                    data[i] = data[i+1] = data[i+2] = gray;
+                }
+
+                // 2. Floyd-Steinberg Dithering
+                const buffer = new Float32Array(OLED_WIDTH * OLED_HEIGHT);
+                for (let i = 0; i < OLED_WIDTH * OLED_HEIGHT; i++) {
+                    buffer[i] = data[i * 4];
+                }
+
+                const oledBuffer = new Uint8Array((OLED_WIDTH * OLED_HEIGHT) / 8);
+
+                for (let y = 0; y < OLED_HEIGHT; y++) {
+                    for (let x = 0; x < OLED_WIDTH; x++) {
+                        const idx = y * OLED_WIDTH + x;
+                        const oldPixel = buffer[idx];
+                        const newPixel = oldPixel < 128 ? 0 : 255;
+                        buffer[idx] = newPixel;
+                        
+                        const error = (oldPixel - newPixel) * ditherIntensity;
+
+                        if (x + 1 < OLED_WIDTH) buffer[idx + 1] += error * 7 / 16;
+                        if (y + 1 < OLED_HEIGHT) {
+                            if (x > 0) buffer[idx + OLED_WIDTH - 1] += error * 3 / 16;
+                            buffer[idx + OLED_WIDTH] += error * 5 / 16;
+                            if (x + 1 < OLED_WIDTH) buffer[idx + OLED_WIDTH + 1] += error * 1 / 16;
+                        }
+
+                        // Pack into 1-bit array (SSD1306 format: horizontal bytes, vertical pages or just linear)
+                        // Standard linear: 128*64 / 8 = 1024 bytes.
+                        // Each byte is 8 horizontal pixels.
+                        if (newPixel > 0) {
+                            const byteIdx = Math.floor(idx / 8);
+                            const bitIdx = 7 - (idx % 8);
+                            oledBuffer[byteIdx] |= (1 << bitIdx);
+                        }
+                    }
+                }
+
+                return oledBuffer;
+            };
+
+            const renderPreview = () => {
+                if (frames.length === 0) return;
+                const canvas = previewCanvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const frame = frames[currentFrameIdx];
+
+                const imgData = ctx.createImageData(OLED_WIDTH, OLED_HEIGHT);
+                for (let i = 0; i < OLED_WIDTH * OLED_HEIGHT; i++) {
+                    const byteIdx = Math.floor(i / 8);
+                    const bitIdx = 7 - (i % 8);
+                    const val = (frame[byteIdx] & (1 << bitIdx)) ? 255 : 0;
+                    
+                    const dIdx = i * 4;
+                    imgData.data[dIdx] = val === 255 ? 0 : 20; // Matrix Green or Dark
+                    imgData.data[dIdx+1] = val === 255 ? 255 : 20;
+                    imgData.data[dIdx+2] = val === 255 ? 153 : 20;
+                    imgData.data[dIdx+3] = 255;
+                }
+                ctx.putImageData(imgData, 0, 0);
+            };
+
+            useEffect(() => {
+                renderPreview();
+            }, [frames, currentFrameIdx]);
+
+            const togglePlay = () => {
+                if (isPlaying) {
+                    clearInterval(playIntervalRef.current);
+                    setIsPlaying(false);
+                } else {
+                    if (frames.length <= 1) return;
+                    setIsPlaying(true);
+                    playIntervalRef.current = setInterval(() => {
+                        setCurrentFrameIdx(prev => (prev + 1) % frames.length);
+                    }, 1000 / fps);
+                }
+            };
+
+            const exportCpp = () => {
+                let output = `// OLED Animation: ${file.name}\n`;
+                output += `// Frames: ${frames.length}, Width: 128, Height: 64\n`;
+                output += `#include <avr/pgmspace.h>\n\n`;
+                
+                frames.forEach((frame, i) => {
+                    output += `const unsigned char frame_${i}[] PROGMEM = {\n  `;
+                    for (let j = 0; j < frame.length; j++) {
+                        output += `0x${frame[j].toString(16).padStart(2, '0')}${j === frame.length - 1 ? '' : ', '}`;
+                        if ((j + 1) % 16 === 0) output += '\n  ';
+                    }
+                    output += `\n};\n\n`;
+                });
+
+                output += `const unsigned char* const animation_frames[] PROGMEM = {\n  `;
+                frames.forEach((_, i) => {
+                    output += `frame_${i}${i === frames.length - 1 ? '' : ', '}`;
+                });
+                output += `\n};\n`;
+
+                downloadFile(output, `${file.name.split('.')[0]}_oled.h`, 'text/plain');
+            };
+
+            const exportBin = () => {
+                const totalSize = frames.length * 1024;
+                const binData = new Uint8Array(totalSize);
+                frames.forEach((frame, i) => {
+                    binData.set(frame, i * 1024);
+                });
+                const blob = new Blob([binData], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${file.name.split('.')[0]}.bin`;
+                a.click();
+            };
+
+            const downloadFile = (content, filename, type) => {
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+            };
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto">
+                    {/* Header */}
+                    <header className="flex justify-between items-center mb-12">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tighter flex items-center gap-3">
+                                <span className="accent-bg p-1.5 rounded-lg text-black">
+                                    <i data-lucide="cpu" className="w-6 h-6"></i>
+                                </span>
+                                OLED <span className="accent-text">Multitool</span>
+                            </h1>
+                            <p className="text-zinc-500 mt-1 text-sm">Premium Media to 1-bit Converter</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className={`flex items-center gap-2 text-xs font-mono ${ffmpegLoaded ? 'text-accent' : 'text-amber-500'}`}>
+                                <div className={`w-2 h-2 rounded-full ${ffmpegLoaded ? 'accent-bg shadow-[0_0_8px_var(--accent)]' : 'bg-amber-500 animate-pulse'}`}></div>
+                                {ffmpegLoaded ? 'FFMPEG READY' : 'LOADING ENGINE...'}
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        {/* Left Column: Controls */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <Card title="Source Media">
+                                <div 
+                                    className={`border-2 border-dashed rounded-xl p-8 transition-all text-center cursor-pointer
+                                        ${file ? 'border-accent/50 bg-accent/5' : 'border-zinc-800 hover:border-zinc-700'}`}
+                                    onClick={() => document.getElementById('fileInput').click()}
+                                >
+                                    <input 
+                                        id="fileInput" 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*,video/*" 
+                                        onChange={handleFileChange}
+                                    />
+                                    <i data-lucide="upload-cloud" className={`w-10 h-10 mx-auto mb-4 ${file ? 'accent-text' : 'text-zinc-600'}`}></i>
+                                    {file ? (
+                                        <div>
+                                            <p className="text-sm font-medium truncate">{file.name}</p>
+                                            <p className="text-xs text-zinc-500 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-zinc-500">Drop image or video here</p>
+                                    )}
+                                </div>
+                            </Card>
+
+                            <Card title="Processing Parameters">
+                                <Slider label="Brightness" value={brightness} min={-100} max={100} onChange={setBrightness} />
+                                <Slider label="Contrast" value={contrast} min={0.5} max={3} step={0.1} onChange={setContrast} />
+                                <Slider label="Dither Intensity" value={ditherIntensity} min={0} max={2} step={0.1} onChange={setDitherIntensity} />
+                                
+                                {fileType === 'video' && (
+                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                        <Slider label="Target FPS" value={fps} min={1} max={30} onChange={setFps} />
+                                        <Slider label="Max Duration" value={maxDuration} min={1} max={30} unit="s" onChange={setMaxDuration} />
+                                    </motion.div>
+                                )}
+
+                                <Button 
+                                    className="w-full mt-4 py-3" 
+                                    onClick={processMedia} 
+                                    disabled={!file || !ffmpegLoaded || isProcessing}
+                                >
+                                    {isProcessing ? (
+                                        <>
+                                            <i data-lucide="loader-2" className="w-4 h-4 animate-spin"></i>
+                                            Processing {progress}%
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i data-lucide="zap" className="w-4 h-4"></i>
+                                            Generate OLED Data
+                                        </>
+                                    )}
+                                </Button>
+                            </Card>
+
+                            <Card title="Export Options">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button variant="outline" onClick={exportCpp} disabled={frames.length === 0}>
+                                        <i data-lucide="code" className="w-4 h-4"></i>
+                                        C++ Header
+                                    </Button>
+                                    <Button variant="outline" onClick={exportBin} disabled={frames.length === 0}>
+                                        <i data-lucide="file-binary" className="w-4 h-4"></i>
+                                        Binary (.bin)
+                                    </Button>
+                                </div>
+                            </Card>
+                        </div>
+
+                        {/* Right Column: Preview */}
+                        <div className="lg:col-span-8 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Card title="Original Source" className="flex flex-col items-center justify-center min-h-[300px]">
+                                    {file ? (
+                                        fileType === 'video' ? (
+                                            <video 
+                                                src={URL.createObjectURL(file)} 
+                                                className="max-w-full max-h-[240px] rounded-lg shadow-2xl" 
+                                                controls 
+                                            />
+                                        ) : (
+                                            <img 
+                                                src={URL.createObjectURL(file)} 
+                                                className="max-w-full max-h-[240px] rounded-lg shadow-2xl" 
+                                            />
+                                        )
+                                    ) : (
+                                        <div className="text-zinc-700 flex flex-col items-center">
+                                            <i data-lucide="image" className="w-12 h-12 mb-2 opacity-20"></i>
+                                            <p className="text-sm">No media selected</p>
+                                        </div>
+                                    )}
+                                </Card>
+
+                                <Card title="OLED Simulated View" className="flex flex-col items-center justify-center min-h-[300px]">
+                                    <div className={`relative p-4 bg-black rounded-xl border-4 border-zinc-800 shadow-2xl ${isProcessing ? 'glow-pulse' : ''}`}>
+                                        <canvas 
+                                            ref={previewCanvasRef} 
+                                            width={OLED_WIDTH} 
+                                            height={OLED_HEIGHT}
+                                            className="canvas-pixelated w-[256px] h-[128px] md:w-[384px] md:h-[192px]"
+                                        ></canvas>
+                                        
+                                        {frames.length > 1 && (
+                                            <div className="absolute -bottom-12 left-0 right-0 flex items-center gap-4">
+                                                <button 
+                                                    onClick={togglePlay}
+                                                    className="w-10 h-10 rounded-full accent-bg text-black flex items-center justify-center hover:scale-105 transition-transform"
+                                                >
+                                                    <i data-lucide={isPlaying ? "pause" : "play"} className="w-5 h-5"></i>
+                                                </button>
+                                                <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full accent-bg transition-all duration-100"
+                                                        style={{ width: `${(currentFrameIdx / (frames.length - 1)) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-[10px] font-mono text-zinc-500">
+                                                    {currentFrameIdx + 1}/{frames.length}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {frames.length === 0 && !isProcessing && (
+                                        <div className="text-zinc-700 flex flex-col items-center mt-4">
+                                            <i data-lucide="monitor" className="w-12 h-12 mb-2 opacity-20"></i>
+                                            <p className="text-sm">Preview will appear here</p>
+                                        </div>
+                                    )}
+                                </Card>
+                            </div>
+
+                            {/* Status / Log */}
+                            <Card title="System Status">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-xs font-mono">
+                                        <span className="text-zinc-500">Engine:</span>
+                                        <span className={ffmpegLoaded ? 'text-accent' : 'text-zinc-600'}>
+                                            {ffmpegLoaded ? 'FFmpeg.wasm v0.12.7 (Threaded)' : 'Initializing...'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-mono">
+                                        <span className="text-zinc-500">Memory:</span>
+                                        <span className="text-zinc-300">WASM SharedArrayBuffer Enabled</span>
+                                    </div>
+                                    {isProcessing && (
+                                        <div className="mt-4">
+                                            <div className="flex justify-between text-[10px] uppercase tracking-widest text-accent mb-1">
+                                                <span>Processing Pipeline</span>
+                                                <span>{progress}%</span>
+                                            </div>
+                                            <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                                                <motion.div 
+                                                    className="h-full accent-bg"
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${progress}%` }}
+                                                ></motion.div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        
+        // Initialize Lucide icons after render
+        setTimeout(() => lucide.createIcons(), 500);
+    </script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</body>
+</html>
