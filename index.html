@@ -745,6 +745,7 @@
     let pipelineCtx = null;
     let sequenceMonos = [];
     let sequenceDirty = true;
+    let sequenceDebounce = null;
     let autoFpsAdjusting = false;
     let currentLang = "en";
     let lastStatusKey = "idle";
@@ -1521,7 +1522,23 @@
       return sequenceMonos;
     }
 
-    function renderFramePreview(index) {
+    function computeSingleFrameMono(index, prevHyst) {
+      const ctx = ensurePipeline();
+      const frame = sourceFrames[index];
+      drawScaledFrame(ctx, frame, els.scalingMode.value, els.bgFill.value);
+      const imageData = ctx.getImageData(0, 0, OLED_W, OLED_H);
+      return processImageDataToMono(imageData, prevHyst);
+    }
+
+    function scheduleSequenceFullRecompute() {
+      clearTimeout(sequenceDebounce);
+      sequenceDebounce = setTimeout(() => {
+        sequenceDebounce = null;
+        renderFramePreview(currentFrameIndex);
+      }, 200);
+    }
+
+    function renderFramePreview(index, quick) {
       if (!sourceFrames.length) return;
       currentFrameIndex = Math.max(0, Math.min(index, sourceFrames.length - 1));
       els.frameIndex.value = String(currentFrameIndex);
@@ -1529,12 +1546,22 @@
       drawScaledFrame(originalCtx, frame, els.scalingMode.value, els.bgFill.value);
 
       if (sequenceDirty) {
-        const start = performance.now();
-        computeSequenceMonos();
-        lastProcessMsPerFrame = (performance.now() - start) / Math.max(1, sourceFrames.length);
+        if (quick) {
+          const prevHyst =
+            sequenceMonos.length === sourceFrames.length
+              ? sequenceMonos[Math.max(0, currentFrameIndex - 1)]
+              : null;
+          sequenceMonos[currentFrameIndex] = computeSingleFrameMono(currentFrameIndex, prevHyst);
+          renderMonoToOledSim(sequenceMonos[currentFrameIndex]);
+        } else {
+          const start = performance.now();
+          computeSequenceMonos();
+          lastProcessMsPerFrame = (performance.now() - start) / Math.max(1, sourceFrames.length);
+          renderMonoToOledSim(sequenceMonos[currentFrameIndex]);
+        }
+      } else {
+        renderMonoToOledSim(sequenceMonos[currentFrameIndex]);
       }
-
-      renderMonoToOledSim(sequenceMonos[currentFrameIndex]);
       updateControlLabels();
       updatePlayerStatus();
       updateStats(sourceFrames.length, lastProcessMsPerFrame);
@@ -1891,6 +1918,7 @@
 
     async function processFile(file) {
       stopPlayback(true);
+      clearTimeout(sequenceDebounce);
       releaseSourceFrames();
       currentFile = file;
       els.fileMeta.removeAttribute("data-i18n");
@@ -1969,7 +1997,7 @@
       stopPlayback(true);
       const total = sourceFrames.length;
       const next = (currentFrameIndex + delta + total) % total;
-      renderFramePreview(next);
+      renderFramePreview(next, true);
     }
 
     function animationLoop(ts) {
@@ -2033,17 +2061,21 @@
         els.invertColors,
       ].forEach((el) => {
         el.addEventListener("input", () => {
+          sequenceDirty = true;
           updateControlLabels();
-          renderFramePreview(currentFrameIndex);
+          renderFramePreview(currentFrameIndex, true);
+          scheduleSequenceFullRecompute();
         });
         el.addEventListener("change", () => {
+          clearTimeout(sequenceDebounce);
+          sequenceDirty = true;
           updateControlLabels();
-          renderFramePreview(currentFrameIndex);
+          renderFramePreview(currentFrameIndex, false);
         });
       });
 
       els.frameIndex.addEventListener("input", () => {
-        renderFramePreview(Number(els.frameIndex.value));
+        renderFramePreview(Number(els.frameIndex.value), true);
       });
 
       els.stepBackBtn.addEventListener("click", () => stepFrame(-1));
