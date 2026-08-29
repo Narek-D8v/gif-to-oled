@@ -25,7 +25,11 @@
   </script>
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
   <style>
+    html {
+      overflow-x: hidden;
+    }
     body {
+      overflow-x: hidden;
       background:
         radial-gradient(1100px 520px at 12% -5%, rgba(0, 255, 153, 0.09), transparent 60%),
         radial-gradient(900px 520px at 88% 5%, rgba(0, 217, 255, 0.07), transparent 55%),
@@ -68,9 +72,10 @@
     .group[open] summary .chev { transform: rotate(180deg); }
     .group > .group-body { padding: 0 16px 16px; }
     .group-body { display: grid; gap: 12px; }
+    .group-body > * { min-width: 0; }
 
-    .field-label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
-    .field-hint { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .field-label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; overflow-wrap: anywhere; }
+    .field-hint { font-size: 11px; color: #64748b; margin-top: 2px; overflow-wrap: anywhere; }
 
     select.field,
     input.text {
@@ -201,6 +206,12 @@
     .switch input:focus-visible + .switch-track {
       outline: 2px solid rgba(0, 255, 153, 0.5);
       outline-offset: 2px;
+    }
+    .switch > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+
+    #stats,
+    #playerStatus {
+      overflow-wrap: anywhere;
     }
 
     .btn {
@@ -427,9 +438,9 @@
               <p class="text-sm font-medium text-slate-200" data-i18n="dz.title">Drop media here, or click to browse</p>
               <p class="mt-1.5 text-xs text-slate-500" data-i18n="dz.sub">MP4 · GIF · WEBM · JPEG · PNG</p>
             </label>
-            <div class="flex items-center justify-between gap-2 text-xs">
-              <p id="fileMeta" class="truncate text-slate-400" data-i18n="noFile">No file selected.</p>
-              <span id="ffmpegStatus" class="chip font-mono text-cyber">FFmpeg: idle</span>
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <p id="fileMeta" class="max-w-full truncate text-slate-400 min-w-0" data-i18n="noFile">No file selected.</p>
+              <span id="ffmpegStatus" class="chip shrink-0 font-mono text-cyber">FFmpeg: idle</span>
             </div>
             <div class="flex items-center justify-end">
               <button id="reprocessBtn" class="btn btn-ghost btn-sm" data-i18n="btn.reprocess">↻ Reprocess Media</button>
@@ -630,7 +641,7 @@
             </div>
           </div>
 
-          <button id="convertBtn" class="btn btn-primary btn-lg w-full">
+          <button id="convertBtn" class="btn btn-primary btn-lg w-full whitespace-normal leading-snug">
             <span data-i18n="btn.generate">Generate export frames</span>
             <span class="tip" data-i18n-tip="tip.generate">i</span>
           </button>
