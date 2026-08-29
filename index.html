@@ -529,6 +529,7 @@
                   <option value="black" selected data-i18n="o.black">Black</option>
                   <option value="white" data-i18n="o.white">White</option>
                 </select>
+                <label class="switch mt-2"><input id="backgroundKey" type="checkbox" /><span class="switch-track"><i></i></span><span><span data-i18n="bgKey">Match source background</span> <span class="tip" data-i18n-tip="bgKeyTip">i</span></span></label>
               </div>
             </div>
           </div>
@@ -686,6 +687,7 @@
       autoLevels: document.getElementById("autoLevels"),
       flicker: document.getElementById("flicker"),
       bgFill: document.getElementById("bgFill"),
+      backgroundKey: document.getElementById("backgroundKey"),
       motionSmooth: document.getElementById("motionSmooth"),
       hdrTonemap: document.getElementById("hdrTonemap"),
       fpsSelect: document.getElementById("fpsSelect"),
@@ -746,6 +748,7 @@
     let sequenceMonos = [];
     let sequenceDirty = true;
     let sequenceDebounce = null;
+    let bgDetection = null;
     let autoFpsAdjusting = false;
     let currentLang = "en";
     let lastStatusKey = "idle";
@@ -804,6 +807,8 @@
         lumModelTip: "How RGB colors become brightness. Perceptual sRGB is most accurate; Rec.601 and Rec.709 are broadcast standards.",
         fill: "Transparent fill",
         fillTip: "Color used under transparent areas before dithering.",
+        bgKey: "Match source background",
+        bgKeyTip: "Pixels close to the image's edge background are flattened to the chosen fill, so a white GIF backdrop becomes one clean level and the fill choice always shows.",
         fps: "Target frame rate",
         fpsTip: "Frames kept per second. On low-motion video the tool auto-reduces this to save flash space.",
         motionSmooth: "Motion smoothing",
@@ -931,6 +936,8 @@
         lumModelTip: "Как RGB превращается в яркость. Perceptual sRGB точнее всего; Rec.601 и Rec.709 — вещательные стандарты.",
         fill: "Заливка прозрачного",
         fillTip: "Цвет под прозрачными областями до дитеринга.",
+        bgKey: "Выровнять по фону источника",
+        bgKeyTip: "Пиксели, близкие к фону на краях кадра, приводятся к выбранной заливке: белый фон GIF становится ровным полем, и выбор заливки всегда заметен.",
         fps: "Целевой FPS",
         fpsTip: "Сколько кадров в секунду сохранять. На спокойном видео инструмент сам снижает частоту для экономии флеша.",
         motionSmooth: "Сглаживание движения",
@@ -1107,17 +1114,36 @@
       ctx.fillStyle = bgFill === "white" ? "#fff" : "#000";
       ctx.fillRect(0, 0, cw, ch);
 
+      let rect;
       if (mode === "stretch") {
+        rect = { x0: 0, y0: 0, x1: cw, y1: ch };
         ctx.drawImage(imageLike, 0, 0, cw, ch);
-        return;
+      } else {
+        const scale = mode === "fill" ? Math.max(cw / iw, ch / ih) : Math.min(cw / iw, ch / ih);
+        const dw = Math.max(1, Math.round(iw * scale));
+        const dh = Math.max(1, Math.round(ih * scale));
+        const dx = Math.floor((cw - dw) / 2);
+        const dy = Math.floor((ch - dh) / 2);
+        rect = { x0: dx, y0: dy, x1: dx + dw, y1: dy + dh };
+        ctx.drawImage(imageLike, dx, dy, dw, dh);
       }
 
-      const scale = mode === "fill" ? Math.max(cw / iw, ch / ih) : Math.min(cw / iw, ch / ih);
-      const dw = Math.max(1, Math.round(iw * scale));
-      const dh = Math.max(1, Math.round(ih * scale));
-      const dx = Math.floor((cw - dw) / 2);
-      const dy = Math.floor((ch - dh) / 2);
-      ctx.drawImage(imageLike, dx, dy, dw, dh);
+      bgDetection = null;
+      if (els.backgroundKey.checked && rect.x1 - rect.x0 > 4 && rect.y1 - rect.y0 > 4) {
+        const im = ctx.getImageData(0, 0, cw, ch).data;
+        let sumR = 0, sumG = 0, sumB = 0, cnt = 0;
+        const stepX = Math.max(1, Math.round((rect.x1 - rect.x0) / 40));
+        const stepY = Math.max(1, Math.round((rect.y1 - rect.y0) / 40));
+        for (let y = rect.y0 + 2; y < rect.y1 - 2; y += stepY) {
+          for (let x = rect.x0 + 2; x < rect.x1 - 2; x += stepX) {
+            const p = (y * cw + x) * 4;
+            sumR += im[p]; sumG += im[p + 1]; sumB += im[p + 2]; cnt++;
+          }
+        }
+        if (cnt) {
+          bgDetection = { r: sumR / cnt, g: sumG / cnt, b: sumB / cnt };
+        }
+      }
     }
 
     function srgbToLinear8(c) {
@@ -1155,9 +1181,15 @@
       const h = imageData.height;
       const src = imageData.data;
       const gray = new Float32Array(w * h);
+      const bg = els.backgroundKey.checked ? bgDetection : null;
+      const fillWhite = els.bgFill.value === "white";
 
       for (let i = 0, p = 0; i < gray.length; i++, p += 4) {
-        gray[i] = applyBrightnessContrast(toLuma(src[p], src[p + 1], src[p + 2]), brightness, contrast);
+        let r = src[p]; let g = src[p + 1]; let b = src[p + 2];
+        if (bg && Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b) <= 64) {
+          r = fillWhite ? 255 : 0; g = r; b = r;
+        }
+        gray[i] = applyBrightnessContrast(toLuma(r, g, b), brightness, contrast);
       }
       return gray;
     }
@@ -2055,6 +2087,7 @@
         els.autoLevels,
         els.flicker,
         els.bgFill,
+        els.backgroundKey,
         els.scalingMode,
         els.packOrientation,
         els.bitOrder,
