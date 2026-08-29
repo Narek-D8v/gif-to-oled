@@ -1638,6 +1638,7 @@
     async function runExtract(inName, info) {
       const args = ["-i", inName];
       if (info) args.push("-vf", info);
+      args.push("-vsync", "0");
       args.push("frame_%05d.png");
       try {
         await ffmpeg.run(...args);
