@@ -565,7 +565,7 @@
               </div>
             </div>
             <label class="switch"><input id="hdrTonemap" type="checkbox" /><span class="switch-track"><i></i></span><span><span data-i18n="hdrTonemap">HDR → SDR tonemapping</span> <span class="tip" data-i18n-tip="hdrTonemapTip">i</span></span></label>
-            <p class="field-hint" data-i18n="timingHint">Motion smoothing and tonemapping apply on "Reprocess Media"; frame rate applies automatically.</p>
+            <p class="field-hint" data-i18n="timingHint">Motion smoothing and tonemapping apply on "Reprocess Media".</p>
           </div>
         </details>
 
@@ -754,8 +754,6 @@
     let sequenceDirty = true;
     let sequenceDebounce = null;
     let bgDetection = null;
-    let fpsReprocessTimer = null;
-    let autoFpsAdjusting = false;
     let currentLang = "en";
     let lastStatusKey = "idle";
     let lastStatusVars = null;
@@ -818,7 +816,7 @@
         bgKey: "Match source background",
         bgKeyTip: "Pixels close to the image's edge background are flattened to the chosen fill, so a white GIF backdrop becomes one clean level and the fill choice always shows.",
         fps: "Target frame rate",
-        fpsTip: "Frames kept per second. On low-motion video the tool auto-reduces this to save flash space.",
+        fpsTip: "Playback speed in the preview — how fast frames change. It never changes the stored frame count.",
         motionSmooth: "Motion smoothing",
         motionSmoothTip: "Generates interpolated in-between frames for video (FFmpeg minterpolate). Higher = smoother motion but more frames to store.",
         hdrTonemap: "HDR → SDR tonemapping",
@@ -831,7 +829,7 @@
         bitOrderTip: "Order of bits inside each byte. MSB first is the Adafruit_SSD1306 standard; LSB first suits many other libraries.",
         varName: "C++ variable name",
         varNameTip: "Name of the generated array (oled_animation_data). Keep it a valid C identifier.",
-        timingHint: 'Motion smoothing and tonemapping apply on "Reprocess Media"; frame rate applies automatically.',
+        timingHint: 'Motion smoothing and tonemapping apply on "Reprocess Media".',
         "ph.header": "Generated C++ header will appear here…",
         "o.floyd": "Floyd-Steinberg",
         "o.jarvis": "Jarvis",
@@ -877,9 +875,8 @@
         "log.selected": "Selected: {name} ({size} KB)",
         "log.loaded": 'Loaded file "{name}" with {n} frame(s).',
         "log.extracted": "Extracted {n} frames at {fps} FPS using FFmpeg{suffix}.",
-        "log.gifSuffix": " (original GIF timing preserved)",
-        "log.autofps": "Auto-tuned frame rate: {fps} FPS (measured motion {motion}/255). Low-motion content needs fewer frames for the same look.",
-        "log.gifFps": "GIF kept {n} frames at {fps} FPS.",
+        "log.gifSuffix": "",
+        "log.fpsSpeed": "Playback speed set to {fps} FPS. Stored frames: {n} (unchanged).",
         "log.hdr": "HDR video detected — HDR → SDR tonemapping enabled automatically.",
         "log.minterpFail": "Motion smoothing not available in this FFmpeg build; falling back to uniform frame rate.",
         "log.tonemapFail": "Tonemapping not available in this FFmpeg build; falling back to direct conversion.",
@@ -889,8 +886,6 @@
         "log.exported": "Export frames generated: {n} frames, {ms} ms total.",
         "log.headerReady": 'Header and BIN prepared with variable "{name}".',
         "log.frame": "Frame {f}/{n} processed using {dither} dithering.",
-        "log.fpsHint": 'FPS changed. Click "{btn}" to re-extract frames at the new rate.',
-        "log.fpsApply": 'FPS changed to {fps}. Re-extracting frames automatically…',
         "log.smoothHint": 'Motion smoothing changed. Click "{btn}" to re-extract frames.',
         "log.tonemapHint": 'HDR tonemapping changed. Click "{btn}" to re-extract frames.',
         docTitle: "OLED Media Studio — GIF/Video → SSD1306",
@@ -952,7 +947,7 @@
         bgKey: "Выровнять по фону источника",
         bgKeyTip: "Пиксели, близкие к фону на краях кадра, приводятся к выбранной заливке: белый фон GIF становится ровным полем, и выбор заливки всегда заметен.",
         fps: "Целевой FPS",
-        fpsTip: "Сколько кадров в секунду сохранять. На спокойном видео инструмент сам снижает частоту для экономии флеша.",
+        fpsTip: "Скорость воспроизведения в превью — как быстро меняются кадры. Количество сохранённых кадров она не меняет.",
         motionSmooth: "Сглаживание движения",
         motionSmoothTip: "Генерирует промежуточные кадры для видео (минтерполяция FFmpeg). Больше — плавнее, но и кадров для хранения больше.",
         hdrTonemap: "Тонамаппинг HDR → SDR",
@@ -965,7 +960,7 @@
         bitOrderTip: "Порядок битов внутри байта. MSB first — стандарт Adafruit_SSD1306; LSB first подходит для многих других библиотек.",
         varName: "Имя переменной C++",
         varNameTip: "Имя генерируемого массива (oled_animation_data). Должно оставаться корректным идентификатором C.",
-        timingHint: 'Сглаживание и тонамаппинг применяются кнопкой «Повторить обработку»; частота кадров применяется автоматически.',
+        timingHint: 'Сглаживание и тонамаппинг применяются кнопкой «Повторить обработку».',
         "ph.header": "Здесь появится сгенерированный C++-заголовок…",
         "o.floyd": "Флойд-Стейнберг",
         "o.jarvis": "Джарвис",
@@ -1011,9 +1006,8 @@
         "log.selected": "Выбрано: {name} ({size} КБ)",
         "log.loaded": 'Загружен файл «{name}»: {n} кадр(ов).',
         "log.extracted": "Извлечено {n} кадров при {fps} FPS через FFmpeg{suffix}.",
-        "log.gifSuffix": " (сохранён исходный тайминг GIF)",
-        "log.autofps": "Автоматически выбрана частота: {fps} FPS (движение {motion}/255). Спокойному контенту нужно меньше кадров.",
-        "log.gifFps": "GIF: оставлено {n} кадров при {fps} FPS.",
+        "log.gifSuffix": "",
+        "log.fpsSpeed": "Частота воспроизведения: {fps} FPS. Кадров сохранено: {n} (без изменений).",
         "log.hdr": "Обнаружено HDR-видео — тонамаппинг включён автоматически.",
         "log.minterpFail": "Интерполяция недоступна в этой сборке FFmpeg; откат к равномерной частоте.",
         "log.tonemapFail": "Тонамаппинг недоступен в этой сборке FFmpeg; откат к прямой конвертации.",
@@ -1023,8 +1017,6 @@
         "log.exported": "Кадры экспорта созданы: {n} кадров, {ms} мс.",
         "log.headerReady": 'Заголовок и BIN подготовлены с переменной "{name}".',
         "log.frame": "Кадр {f}/{n} обработан, дитеря: {dither}.",
-        "log.fpsHint": 'Частота изменена. Нажмите «{btn}», чтобы переизвлечь кадры.',
-        "log.fpsApply": 'Частота изменена на {fps} FPS. Автоматически переизвлекаю кадры…',
         "log.smoothHint": 'Сглаживание изменено. Нажмите «{btn}», чтобы переизвлечь кадры.',
         "log.tonemapHint": 'Тонамаппинг изменён. Нажмите «{btn}», чтобы переизвлечь кадры.',
         docTitle: "OLED Media Studio — GIF/видео → SSD1306",
@@ -1669,67 +1661,10 @@
       return new Array(count).fill(1000 / outFps);
     }
 
-    function padDelays(delays, count) {
-      if (delays.length >= count) return delays.slice(0, count);
-      const out = delays.slice();
-      const fallback = out.length ? out[out.length - 1] : 100;
-      while (out.length < count) out.push(fallback);
-      return out;
-    }
-
-    function decimateFrames(frames, delays, targetFps) {
-      if (targetFps <= 0 || frames.length <= 1) return { frames, delays };
-      const totalMs = delays.reduce((a, b) => a + b, 0) || delays.length * 100;
-      const targetCount = Math.max(1, Math.min(frames.length, Math.round((totalMs / 1000) * targetFps)));
-      if (targetCount >= frames.length) return { frames, delays };
-      const idxs = [];
-      for (let i = 0; i < targetCount; i++) {
-        idxs.push(Math.round((i * (frames.length - 1)) / Math.max(1, targetCount - 1)));
-      }
-      const uniq = [];
-      for (const i of idxs) if (uniq[uniq.length - 1] !== i) uniq.push(i);
-      const keptDelays = uniq.map((i) => delays[i]);
-      const keptTotal = keptDelays.reduce((a, b) => a + b, 0) || 1;
-      const scale = totalMs / keptTotal;
-      return {
-        frames: uniq.map((i) => frames[i]),
-        delays: keptDelays.map((d) => Math.max(1, Math.round(d * scale))),
-      };
-    }
-
-    function measureMotion(frames) {
-      if (frames.length < 2) return 0;
-      const cw = 40;
-      const ch = 40;
-      const canvas = document.createElement("canvas");
-      canvas.width = cw;
-      canvas.height = ch;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      let total = 0;
-      let pairs = 0;
-      let prev = null;
-      for (const frame of frames) {
-        ctx.drawImage(frame, 0, 0, cw, ch);
-        const data = ctx.getImageData(0, 0, cw, ch).data;
-        const gray = new Float32Array(cw * ch);
-        for (let i = 0; i < cw * ch; i++) {
-          gray[i] = 0.2126 * data[i * 4] + 0.7152 * data[i * 4 + 1] + 0.0722 * data[i * 4 + 2];
-        }
-        if (prev) {
-          let diff = 0;
-          for (let i = 0; i < gray.length; i++) diff += Math.abs(gray[i] - prev[i]);
-          total += diff / gray.length;
-          pairs += 1;
-        }
-        prev = gray;
-      }
-      return pairs ? total / pairs : 0;
-    }
-
-    function autoFps(chosen, motion) {
-      if (motion < 1.6) return 1;
-      if (motion < 4.0) return Math.min(chosen, 5);
-      return chosen;
+    function applyPlaybackFps() {
+      if (!sourceFrames.length) return;
+      const fps = Number(els.fpsSelect.value) || 1;
+      frameDurationsMs = uniformDurations(sourceFrames.length, fps);
     }
 
     function probeHdr(inName) {
@@ -1800,145 +1735,39 @@
           .join(",");
         usedMinterp = true;
       } else {
-        vf = [tonemapPart, `fps=${fps}`, scalePart].filter(Boolean).join(",");
+        vf = [tonemapPart, scalePart].filter(Boolean).join(",");
       }
 
       setStatus("extracting", { fps: outFps, extra: usedMinterp ? tr("st.smoothTag") : "" });
       let frames = await runExtract(inName, vf);
 
-      if (!isGif && !usedMinterp && frames.length > 1) {
-        const motion = measureMotion(frames);
-        const effective = autoFps(fps, motion);
-        if (effective !== fps) {
-          outFps = effective;
-          autoFpsAdjusting = true;
-          els.fpsSelect.value = String(effective);
-          autoFpsAdjusting = false;
-          vf = [tonemapPart, `fps=${effective}`, scalePart].filter(Boolean).join(",");
-          frames = await runExtract(inName, vf);
-          appendLog(tr("log.autofps", { fps: effective, motion: motion.toFixed(1) }));
-        }
-      }
-
       if (usedMinterp && !frames.length) {
         appendLog(tr("log.minterpFail"));
         usedMinterp = false;
         outFps = fps;
-        const simpleVf = [tonemapPart, `fps=${fps}`, scalePart].filter(Boolean).join(",");
+        const simpleVf = [tonemapPart, scalePart].filter(Boolean).join(",");
         frames = await runExtract(inName, simpleVf);
       }
 
       if (!frames.length && tonemapPart) {
         appendLog(tr("log.tonemapFail"));
         els.hdrTonemap.checked = false;
-        const plainVf = isGif ? scalePart : `fps=${outFps},${scalePart}`;
-        frames = await runExtract(inName, plainVf);
+        frames = await runExtract(inName, scalePart);
       }
 
       ffmpeg.FS("unlink", inName);
 
-      frameDurationsMs = isGif
-        ? padDelays(await readGifDelays(file), frames.length)
-        : uniformDurations(frames.length, outFps);
-
-      if (isGif) {
-        const targetFps = Number(els.fpsSelect.value) || 1;
-        const fullCount = frames.length;
-        const res = decimateFrames(frames, frameDurationsMs, targetFps);
-        frames = res.frames;
-        frameDurationsMs = res.delays;
-        if (res.frames.length < fullCount) appendLog(tr("log.gifFps", { n: frames.length, fps: targetFps }));
-      }
+      frameDurationsMs = uniformDurations(frames.length, outFps);
 
       setStatus("readyFrames", { count: frames.length });
       appendLog(
         tr("log.extracted", {
           n: frames.length,
           fps: outFps,
-          suffix: isGif ? tr("log.gifSuffix") : "",
+          suffix: tr("log.gifSuffix"),
         })
       );
       return frames;
-    }
-
-    async function readGifDelays(file) {
-      let u8;
-      if (typeof file.arrayBuffer === "function") {
-        u8 = new Uint8Array(await file.arrayBuffer());
-      } else {
-        u8 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(new Uint8Array(reader.result));
-          reader.onerror = () => reject(reader.error);
-          reader.readAsArrayBuffer(file);
-        });
-      }
-      return parseGifDelays(u8);
-    }
-
-    function parseGifDelays(u8) {
-      const delays = [];
-      if (u8.length < 13) return delays;
-      if (!(u8[0] === 0x47 && u8[1] === 0x49 && u8[2] === 0x46)) return delays;
-
-      let pos = 6; // after "GIF87a"/"GIF89a"
-      pos += 7; // logical screen descriptor
-      const packedLsd = u8[10];
-      if (packedLsd & 0x80) pos += 3 * (1 << ((packedLsd & 0x07) + 1));
-
-      let pendingDelay = 100;
-
-      while (pos < u8.length - 1) {
-        const b = u8[pos];
-
-        if (b === 0x3b) break; // trailer
-
-        if (b === 0x21) {
-          pos += 1;
-          if (pos >= u8.length) break;
-          const label = u8[pos];
-          pos += 1;
-
-          if (label === 0xf9) {
-            if (pos >= u8.length) break;
-            const size = u8[pos];
-            pos += 1;
-            if (size >= 4 && pos + 4 <= u8.length) {
-              const cs = (u8[pos + 2] << 8) | u8[pos + 1];
-              pendingDelay = cs > 0 ? cs * 10 : 100;
-            }
-            pos += size + 1;
-          } else {
-            while (pos < u8.length) {
-              const blen = u8[pos];
-              pos += 1;
-              if (blen === 0) break;
-              pos += blen;
-            }
-          }
-          continue;
-        }
-
-        if (b === 0x2c) {
-          delays.push(pendingDelay);
-          pendingDelay = 100;
-          pos += 9; // image descriptor (incl. separator)
-          if (pos >= u8.length) break;
-          const packedImage = u8[pos - 1];
-          if (packedImage & 0x80) pos += 3 * (1 << ((packedImage & 0x07) + 1));
-          pos += 1; // LZW minimum code size
-          while (pos < u8.length) {
-            const blen = u8[pos];
-            pos += 1;
-            if (blen === 0) break;
-            pos += blen;
-          }
-          continue;
-        }
-
-        pos += 1;
-      }
-      return delays;
     }
 
     function makeHeaderCode(varName, packedFrames) {
@@ -1995,7 +1824,7 @@
 
     function resetAllSettings() {
       const extractionChanged =
-        els.fpsSelect.value !== "10" || els.motionSmooth.value !== "off" || els.hdrTonemap.checked;
+        els.motionSmooth.value !== "off" || els.hdrTonemap.checked;
       stopPlayback(true);
       els.scalingMode.value = "fit";
       els.ditherAlgo.value = "floyd";
@@ -2018,9 +1847,9 @@
       els.backgroundKey.checked = false;
       els.varName.value = "oled_animation";
       updateControlLabels();
+      applyPlaybackFps();
       sequenceDirty = true;
       clearTimeout(sequenceDebounce);
-      clearTimeout(fpsReprocessTimer);
       if (sourceFrames.length) renderFramePreview(currentFrameIndex, false);
       appendLog(tr("log.reset"));
       if (extractionChanged) appendLog(tr("timingHint"));
@@ -2029,7 +1858,6 @@
     async function processFile(file) {
       stopPlayback(true);
       clearTimeout(sequenceDebounce);
-      clearTimeout(fpsReprocessTimer);
       releaseSourceFrames();
       currentFile = file;
       els.fileMeta.removeAttribute("data-i18n");
@@ -2251,16 +2079,9 @@
       });
 
       els.fpsSelect.addEventListener("change", () => {
-        if (autoFpsAdjusting || !currentFile) return;
-        clearTimeout(fpsReprocessTimer);
-        fpsReprocessTimer = setTimeout(() => {
-          fpsReprocessTimer = null;
-          if (!currentFile) return;
-          appendLog(tr("log.fpsApply", { fps: els.fpsSelect.value }));
-          stopPlayback(true);
-          currentFrameIndex = 0;
-          processFile(currentFile);
-        }, 500);
+        if (!sourceFrames.length) return;
+        applyPlaybackFps();
+        appendLog(tr("log.fpsSpeed", { fps: els.fpsSelect.value, n: sourceFrames.length }));
       });
 
       els.motionSmooth.addEventListener("change", () => {
