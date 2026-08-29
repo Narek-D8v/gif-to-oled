@@ -17,11 +17,6 @@ No installation required. Use the tool directly online:
 
 ---
 
-## 📸 Demo
-
-> *Add a screenshot of your tool's interface to attract more users!*
-
----
 
 ## ✨ Features
 
