@@ -23,20 +23,236 @@
       },
     };
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/coi-serviceworker/coi-serviceworker.min.js"></script>
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
   <style>
     body {
       background:
-        radial-gradient(circle at 10% 10%, rgba(0, 255, 153, 0.08), transparent 35%),
-        radial-gradient(circle at 90% 20%, rgba(0, 217, 255, 0.06), transparent 35%),
+        radial-gradient(1100px 520px at 12% -5%, rgba(0, 255, 153, 0.09), transparent 60%),
+        radial-gradient(900px 520px at 88% 5%, rgba(0, 217, 255, 0.07), transparent 55%),
         #070b10;
+      color: #e2e8f0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     }
+
+    .card {
+      background: linear-gradient(180deg, rgba(17, 24, 33, 0.92), rgba(11, 16, 22, 0.96));
+      border: 1px solid #1e2936;
+      border-radius: 18px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #00ff99;
+    }
+
+    .group summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      padding: 14px 16px;
+    }
+    .group summary::-webkit-details-marker { display: none; }
+    .group summary .chev {
+      color: #64748b;
+      width: 18px;
+      height: 18px;
+      flex: none;
+      transition: transform 0.2s ease;
+    }
+    .group[open] summary .chev { transform: rotate(180deg); }
+    .group > .group-body { padding: 0 16px 16px; }
+    .group-body { display: grid; gap: 12px; }
+
+    .field-label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+    .field-hint { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    select.field,
+    input.text {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background-color: #0a0f16;
+      border: 1px solid #2a3748;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 9px 34px 9px 12px;
+      font-size: 13px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    select.field {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2300ff99' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    select.field:focus,
+    input.text:focus {
+      outline: none;
+      border-color: rgba(0, 255, 153, 0.7);
+      box-shadow: 0 0 0 3px rgba(0, 255, 153, 0.12);
+    }
+
+    input[type="range"].slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 18px;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].slider::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, rgba(0, 255, 153, 0.85) var(--v, 50%), rgba(148, 163, 184, 0.18) var(--v, 50%));
+    }
+    input[type="range"].slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      margin-top: -5px;
+      border-radius: 50%;
+      background: #00ff99;
+      border: none;
+      box-shadow: 0 0 0 3px rgba(0, 255, 153, 0.15), 0 0 14px rgba(0, 255, 153, 0.5);
+    }
+    input[type="range"].slider::-moz-range-track {
+      height: 6px;
+      border-radius: 9999px;
+      background: rgba(148, 163, 184, 0.18);
+    }
+    input[type="range"].slider::-moz-range-progress {
+      height: 6px;
+      border-radius: 9999px;
+      background: rgba(0, 255, 153, 0.85);
+    }
+    input[type="range"].slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #00ff99;
+      border: none;
+      box-shadow: 0 0 0 3px rgba(0, 255, 153, 0.15), 0 0 14px rgba(0, 255, 153, 0.5);
+    }
+    input[type="range"].slider:focus-visible { outline: none; }
+    input[type="range"].slider:focus-visible::-webkit-slider-thumb {
+      box-shadow: 0 0 0 5px rgba(0, 255, 153, 0.25), 0 0 14px rgba(0, 255, 153, 0.5);
+    }
+
+    .slider-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-bottom: 2px;
+    }
+    .badge {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: #00ff99;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-size: 13px;
+      color: #cbd5e1;
+      position: relative;
+      user-select: none;
+    }
+    .switch input { position: absolute; opacity: 0; pointer-events: none; }
+    .switch-track {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      border-radius: 9999px;
+      background: #1d2735;
+      flex: none;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+      transition: background 0.18s ease;
+    }
+    .switch-track i {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #7d8a9a;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .switch input:checked + .switch-track {
+      background: rgba(0, 255, 153, 0.26);
+      box-shadow: inset 0 0 0 1px rgba(0, 255, 153, 0.35);
+    }
+    .switch input:checked + .switch-track i {
+      transform: translateX(16px);
+      background: #00ff99;
+      box-shadow: 0 0 10px rgba(0, 255, 153, 0.75);
+    }
+    .switch input:focus-visible + .switch-track {
+      outline: 2px solid rgba(0, 255, 153, 0.5);
+      outline-offset: 2px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, #00ff99, #00d68f);
+      color: #04120a;
+      font-weight: 600;
+      box-shadow: 0 0 0 1px rgba(0, 255, 153, 0.4), 0 8px 24px -12px rgba(0, 255, 153, 0.6);
+    }
+    .btn-primary:not(:disabled):hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-cyber {
+      background: rgba(0, 255, 153, 0.08);
+      border: 1px solid rgba(0, 255, 153, 0.55);
+      color: #00ff99;
+    }
+    .btn-cyber:not(:disabled):hover { background: rgba(0, 255, 153, 0.16); }
+    .btn-ghost { border: 1px solid #2c3b4e; color: #cbd5e1; background: transparent; }
+    .btn-ghost:not(:disabled):hover { border-color: rgba(0, 255, 153, 0.6); color: #00ff99; }
+    .btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 9px; }
+    .btn-lg { padding: 12px 20px; font-size: 15px; border-radius: 12px; }
+
+    .dropzone {
+      background: rgba(10, 15, 22, 0.5);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    .dropzone:hover { border-color: rgba(0, 255, 153, 0.5); }
+    .dropzone.drag {
+      border-color: #00ff99;
+      background: rgba(0, 255, 153, 0.05);
+      box-shadow: 0 0 0 1px rgba(0, 255, 153, 0.4), 0 0 26px rgba(0, 255, 153, 0.18);
+    }
+
     .scanline::before {
       content: "";
       position: absolute;
       inset: 0;
       pointer-events: none;
+      border-radius: inherit;
       background: repeating-linear-gradient(
         to bottom,
         rgba(255, 255, 255, 0.02),
@@ -54,178 +270,388 @@
       border-radius: 6px;
       box-shadow: inset 0 0 24px rgba(0, 255, 153, 0.08);
     }
-    .dropzone.drag {
-      border-color: #00ff99;
-      box-shadow: 0 0 0 1px rgba(0, 255, 153, 0.35), 0 0 20px rgba(0, 255, 153, 0.15);
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 9999px;
+      border: 1px solid #2a3748;
+      background: #0d141c;
+      color: #94a3b8;
+      font-size: 11px;
+      padding: 3px 10px;
     }
+
+    .lang-pill {
+      border: 1px solid #2a3748;
+      color: #94a3b8;
+      background: transparent;
+      border-radius: 9999px;
+      padding: 3px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+    .lang-pill:hover { border-color: rgba(0, 255, 153, 0.5); color: #cbd5e1; }
+    .lang-pill.active {
+      border-color: rgba(0, 255, 153, 0.65);
+      color: #00ff99;
+      background: rgba(0, 255, 153, 0.1);
+    }
+
+    .lang-switch {
+      display: inline-flex;
+      gap: 2px;
+      padding: 2px;
+      border-radius: 9999px;
+      border: 1px solid #2a3748;
+      background: rgba(10, 15, 22, 0.7);
+    }
+    .lang-switch .lang-pill { border-color: transparent; background: transparent; }
+
+    .tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      margin-left: 6px;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      font-style: italic;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      line-height: 1;
+      color: rgba(148, 163, 184, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(148, 163, 184, 0.08);
+      cursor: help;
+      vertical-align: middle;
+      flex: none;
+      transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .tip:hover,
+    .tip:focus-visible {
+      color: #00ff99;
+      border-color: rgba(0, 255, 153, 0.6);
+      background: rgba(0, 255, 153, 0.12);
+    }
+    .tip::after {
+      content: attr(data-tip);
+      position: absolute;
+      top: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-5px);
+      width: max-content;
+      max-width: 230px;
+      background: #0a0f16;
+      border: 1px solid #2a3748;
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 400;
+      font-style: normal;
+      line-height: 1.45;
+      letter-spacing: normal;
+      text-transform: none;
+      text-align: left;
+      white-space: normal;
+      padding: 8px 11px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      z-index: 60;
+    }
+    .tip:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: #22303f; border-radius: 8px; border: 2px solid #0a0f16; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    textarea::-webkit-scrollbar { width: 8px; }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen">
-  <main class="max-w-7xl mx-auto px-4 py-8">
-    <header class="mb-6">
-      <h1 class="text-2xl md:text-3xl font-bold text-cyber">OLED Media Multitool</h1>
-      <p class="text-slate-300 mt-2">
-        Video / GIF / Image to SSD1306-ready data. Fully client-side, GitHub Pages friendly.
-      </p>
-    </header>
-
-    <section class="grid lg:grid-cols-3 gap-4">
-      <div class="lg:col-span-1 space-y-4">
-        <div class="bg-panel border border-line rounded-xl p-4">
-          <h2 class="font-semibold text-cyber mb-3">Input</h2>
-          <label
-            id="dropzone"
-            class="dropzone block cursor-pointer border border-dashed border-slate-500 rounded-lg p-6 text-center transition"
-          >
-            <input id="fileInput" type="file" accept=".mp4,.gif,.jpg,.jpeg,.png,.webm" class="hidden" />
-            <p class="font-medium">Drop media or click to browse</p>
-            <p class="text-xs mt-2 text-slate-400">Accepted: MP4, GIF, JPG, PNG, WEBM</p>
-          </label>
-          <p id="fileMeta" class="text-xs text-slate-400 mt-3">No file selected.</p>
-          <p id="ffmpegStatus" class="text-xs text-cyber mt-2">FFmpeg: idle</p>
+<body class="min-h-screen antialiased">
+  <main class="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+    <header class="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-line bg-panel shadow-[0_0_24px_rgba(0,255,153,0.18)]">
+          <svg class="h-6 w-6 text-cyber" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="13" rx="2" />
+            <path d="M8 21h8M12 17v4" />
+          </svg>
         </div>
-
-        <div class="bg-panel border border-line rounded-xl p-4 space-y-4">
-          <h2 class="font-semibold text-cyber">Processing Controls</h2>
-          <label class="block text-sm">
-            <span class="text-slate-300">Scaling Mode</span>
-            <select id="scalingMode" class="mt-1 w-full bg-panelSoft border border-line rounded-md p-2">
-              <option value="fit" selected>Fit (letterbox)</option>
-              <option value="fill">Fill (crop)</option>
-              <option value="stretch">Stretch (128x64)</option>
-            </select>
-          </label>
-
-          <label class="block text-sm">
-            <span class="text-slate-300">Dithering Algorithm</span>
-            <select id="ditherAlgo" class="mt-1 w-full bg-panelSoft border border-line rounded-md p-2">
-              <option value="floyd" selected>Floyd-Steinberg</option>
-              <option value="atkinson">Atkinson</option>
-              <option value="stucki">Stucki</option>
-              <option value="none">None (Threshold)</option>
-            </select>
-          </label>
-
-          <label class="block text-sm">
-            <span class="text-slate-300">FPS Extraction (video/gif)</span>
-            <select id="fpsSelect" class="mt-1 w-full bg-panelSoft border border-line rounded-md p-2">
-              <option value="1">1 FPS</option>
-              <option value="5">5 FPS</option>
-              <option value="10" selected>10 FPS</option>
-              <option value="15">15 FPS</option>
-            </select>
-          </label>
-
-          <label class="block text-sm">
-            <div class="flex justify-between">
-              <span>Brightness</span>
-              <span id="brightnessVal" class="text-cyber">0</span>
-            </div>
-            <input id="brightness" type="range" min="-100" max="100" value="0" class="w-full" />
-          </label>
-
-          <label class="block text-sm">
-            <div class="flex justify-between">
-              <span>Contrast</span>
-              <span id="contrastVal" class="text-cyber">0</span>
-            </div>
-            <input id="contrast" type="range" min="-100" max="100" value="0" class="w-full" />
-          </label>
-
-          <label class="block text-sm">
-            <div class="flex justify-between">
-              <span>Error Diffusion Intensity</span>
-              <span id="ditherVal" class="text-cyber">1.00</span>
-            </div>
-            <input id="dither" type="range" min="0" max="200" value="100" class="w-full" />
-          </label>
-
-          <label class="block text-sm">
-            <div class="flex justify-between">
-              <span>Threshold Cutoff</span>
-              <span id="thresholdVal" class="text-cyber">128</span>
-            </div>
-            <input id="threshold" type="range" min="0" max="255" value="128" class="w-full" />
-          </label>
-
-          <label class="block text-sm">
-            <span class="text-slate-300">Bit Packing Orientation</span>
-            <select id="packOrientation" class="mt-1 w-full bg-panelSoft border border-line rounded-md p-2">
-              <option value="vertical" selected>Vertical (Page Addressing)</option>
-              <option value="horizontal">Horizontal</option>
-            </select>
-          </label>
-
-          <label class="block text-sm">
-            <span class="text-slate-300">Bit Order</span>
-            <select id="bitOrder" class="mt-1 w-full bg-panelSoft border border-line rounded-md p-2">
-              <option value="lsb" selected>LSB First</option>
-              <option value="msb">MSB First</option>
-            </select>
-          </label>
-
-          <label class="inline-flex items-center gap-2 text-sm">
-            <input id="invertColors" type="checkbox" />
-            <span>Invert Colors (White-on-Black / Black-on-White)</span>
-          </label>
-
-          <label class="block text-sm">
-            <div class="flex justify-between">
-              <span>Frame Index</span>
-              <span id="frameVal" class="text-cyber">0</span>
-            </div>
-            <input id="frameIndex" type="range" min="0" max="0" value="0" class="w-full" />
-          </label>
-
-          <div class="flex flex-wrap gap-2">
-            <button id="stepBackBtn" class="px-3 py-2 rounded-md border border-slate-500 text-slate-200 disabled:opacity-50" disabled>Step -</button>
-            <button id="stepForwardBtn" class="px-3 py-2 rounded-md border border-slate-500 text-slate-200 disabled:opacity-50" disabled>Step +</button>
-            <button id="playPauseBtn" class="px-3 py-2 rounded-md border border-cyber text-cyber disabled:opacity-50" disabled>Play</button>
-            <button id="reprocessBtn" class="px-3 py-2 rounded-md bg-cyber text-black font-semibold">Reprocess Media</button>
-            <button id="convertBtn" class="px-3 py-2 rounded-md border border-cyber text-cyber">Generate Exports</button>
-          </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            OLED <span class="text-cyber" data-i18n="brand.studio">Studio</span>
+          </h1>
+          <p class="text-sm text-slate-400" data-i18n="tagline">Turn videos, GIFs and images into SSD1306-ready frames — 100% in your browser.</p>
         </div>
       </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="chip">GIF</span>
+        <span class="chip">MP4</span>
+        <span class="chip">WEBM</span>
+        <span class="chip">IMG</span>
+        <span class="lang-switch" id="langSwitch">
+          <button id="langEn" class="lang-pill" data-lang="en">EN</button>
+          <button id="langRu" class="lang-pill" data-lang="ru">RU</button>
+        </span>
+      </div>
+    </header>
 
-      <div class="lg:col-span-2 space-y-4">
-        <div class="bg-panel border border-line rounded-xl p-4">
-          <h2 class="font-semibold text-cyber mb-3">Live Preview (128x64)</h2>
-          <div class="grid md:grid-cols-2 gap-4">
-            <div class="bg-black border border-line rounded-lg p-3 scanline relative">
-              <p class="text-xs text-slate-400 mb-2">Original</p>
-              <canvas id="originalCanvas" width="128" height="64" class="w-full max-w-md mx-auto oled-glow"></canvas>
+    <section class="grid gap-4 items-start lg:grid-cols-12">
+      <div class="space-y-4 lg:col-span-5">
+        <details class="group card" open>
+          <summary>
+            <span class="card-title" data-i18n="media">Media</span>
+            <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l4 4 4-4" /></svg>
+          </summary>
+          <div class="group-body">
+            <label
+              id="dropzone"
+              class="dropzone block cursor-pointer border border-dashed border-slate-600 rounded-xl p-6 text-center"
+            >
+              <input id="fileInput" type="file" accept=".mp4,.gif,.jpg,.jpeg,.png,.webm" class="hidden" />
+              <svg class="mx-auto mb-2 h-8 w-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 16V4m0 0L7 9m5-5l5 5" />
+                <path d="M4 20h16" />
+              </svg>
+              <p class="text-sm font-medium text-slate-200" data-i18n="dz.title">Drop media here, or click to browse</p>
+              <p class="mt-1.5 text-xs text-slate-500" data-i18n="dz.sub">MP4 · GIF · WEBM · JPEG · PNG</p>
+            </label>
+            <div class="flex items-center justify-between gap-2 text-xs">
+              <p id="fileMeta" class="truncate text-slate-400" data-i18n="noFile">No file selected.</p>
+              <span id="ffmpegStatus" class="chip font-mono text-cyber">FFmpeg: idle</span>
             </div>
-            <div class="bg-black border border-line rounded-lg p-3 scanline relative">
-              <p class="text-xs text-slate-400 mb-2">OLED Dithered Grid</p>
-              <canvas id="oledCanvas" width="512" height="256" class="w-full max-w-md mx-auto oled-glow oled-sim"></canvas>
+            <div class="flex items-center justify-end">
+              <button id="reprocessBtn" class="btn btn-ghost btn-sm" data-i18n="btn.reprocess">↻ Reprocess Media</button>
+              <span class="tip" data-i18n-tip="btn.reprocessTip">i</span>
             </div>
           </div>
-          <p id="playerStatus" class="text-xs text-cyber mt-3">Frame: 0/0 | Paused</p>
-          <p id="stats" class="text-xs text-slate-400 mt-3">Frames: 0 | Flash: 0 B (0.00 KB) | RAM est.: 0 B (0.00 KB) | Process: 0.00 ms/frame</p>
+        </details>
+
+        <details class="group card" open>
+          <summary>
+            <span class="card-title" data-i18n="picture">Picture</span>
+            <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l4 4 4-4" /></svg>
+          </summary>
+          <div class="group-body">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="ditherAlgo" class="field-label"><span data-i18n="dithering">Dithering</span> <span class="tip" data-i18n-tip="ditheringTip">i</span></label>
+                <select id="ditherAlgo" class="field">
+                  <option value="floyd" selected data-i18n="o.floyd">Floyd-Steinberg</option>
+                  <option value="jarvis" data-i18n="o.jarvis">Jarvis</option>
+                  <option value="stucki" data-i18n="o.stucki">Stucki</option>
+                  <option value="atkinson" data-i18n="o.atkinson">Atkinson</option>
+                  <option value="burkes" data-i18n="o.burkes">Burkes</option>
+                  <option value="sierra" data-i18n="o.sierra">Sierra</option>
+                  <option value="bayer4" data-i18n="o.bayer4">Bayer 4×4</option>
+                  <option value="bayer8" data-i18n="o.bayer8">Bayer 8×8</option>
+                  <option value="blue" data-i18n="o.blue">Blue Noise</option>
+                  <option value="none" data-i18n="o.none">None (hard threshold)</option>
+                </select>
+              </div>
+              <div>
+                <label for="scalingMode" class="field-label"><span data-i18n="scaling">Scaling</span> <span class="tip" data-i18n-tip="scalingTip">i</span></label>
+                <select id="scalingMode" class="field">
+                  <option value="fit" selected data-i18n="o.fit">Fit</option>
+                  <option value="fill" data-i18n="o.fill">Fill (crop)</option>
+                  <option value="stretch" data-i18n="o.stretch">Stretch</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <div class="slider-head"><label for="dither"><span data-i18n="dither">Dither strength</span> <span class="tip" data-i18n-tip="ditherTip">i</span></label><span id="ditherVal" class="badge">1.00</span></div>
+              <input id="dither" type="range" class="slider" min="0" max="200" value="100" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-5">
+              <div>
+                <div class="slider-head"><label for="threshold"><span data-i18n="threshold">Threshold</span> <span class="tip" data-i18n-tip="thresholdTip">i</span></label><span id="thresholdVal" class="badge">128</span></div>
+                <input id="threshold" type="range" class="slider" min="0" max="255" value="128" />
+              </div>
+              <div>
+                <div class="slider-head"><label for="brightness"><span data-i18n="brightness">Brightness</span> <span class="tip" data-i18n-tip="brightnessTip">i</span></label><span id="brightnessVal" class="badge">0</span></div>
+                <input id="brightness" type="range" class="slider" min="-100" max="100" value="0" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-5">
+              <div>
+                <div class="slider-head"><label for="contrast"><span data-i18n="contrast">Contrast</span> <span class="tip" data-i18n-tip="contrastTip">i</span></label><span id="contrastVal" class="badge">0</span></div>
+                <input id="contrast" type="range" class="slider" min="-100" max="100" value="0" />
+              </div>
+              <div>
+                <div class="slider-head"><label for="detailBoost"><span data-i18n="detailBoost">Detail boost</span> <span class="tip" data-i18n-tip="detailBoostTip">i</span></label><span id="detailBoostVal" class="badge">10</span></div>
+                <input id="detailBoost" type="range" class="slider" min="0" max="100" value="10" />
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-x-5 gap-y-3 pt-1">
+              <label class="switch"><input id="serpentine" type="checkbox" checked /><span class="switch-track"><i></i></span><span><span data-i18n="serpentine">Serpentine</span> <span class="tip" data-i18n-tip="serpentineTip">i</span></span></label>
+              <label class="switch"><input id="autoLevels" type="checkbox" checked /><span class="switch-track"><i></i></span><span><span data-i18n="autoLevels">Auto-levels</span> <span class="tip" data-i18n-tip="autoLevelsTip">i</span></span></label>
+              <label class="switch"><input id="flicker" type="checkbox" checked /><span class="switch-track"><i></i></span><span><span data-i18n="flicker">Flicker reduction</span> <span class="tip" data-i18n-tip="flickerTip">i</span></span></label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="lumModel" class="field-label"><span data-i18n="lumModel">Luminance model</span> <span class="tip" data-i18n-tip="lumModelTip">i</span></label>
+                <select id="lumModel" class="field">
+                  <option value="srgb" selected data-i18n="o.srgb">Perceptual sRGB</option>
+                  <option value="rec709" data-i18n="o.rec709">Rec.709</option>
+                  <option value="rec601" data-i18n="o.rec601">Rec.601</option>
+                </select>
+              </div>
+              <div>
+                <label for="bgFill" class="field-label"><span data-i18n="fill">Transparent fill</span> <span class="tip" data-i18n-tip="fillTip">i</span></label>
+                <select id="bgFill" class="field">
+                  <option value="black" selected data-i18n="o.black">Black</option>
+                  <option value="white" data-i18n="o.white">White</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="group card" open>
+          <summary>
+            <span class="card-title" data-i18n="timing">Timing &amp; Motion</span>
+            <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l4 4 4-4" /></svg>
+          </summary>
+          <div class="group-body">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="fpsSelect" class="field-label"><span data-i18n="fps">Target frame rate</span> <span class="tip" data-i18n-tip="fpsTip">i</span></label>
+                <select id="fpsSelect" class="field">
+                  <option value="1">1 FPS</option>
+                  <option value="5">5 FPS</option>
+                  <option value="10" selected>10 FPS</option>
+                  <option value="15">15 FPS</option>
+                </select>
+              </div>
+              <div>
+                <label for="motionSmooth" class="field-label"><span data-i18n="motionSmooth">Motion smoothing</span> <span class="tip" data-i18n-tip="motionSmoothTip">i</span></label>
+                <select id="motionSmooth" class="field">
+                  <option value="off" selected data-i18n="o.off">Off</option>
+                  <option value="2" data-i18n="o.smooth2">2× smooth</option>
+                  <option value="4" data-i18n="o.smooth4">4× extra smooth</option>
+                </select>
+              </div>
+            </div>
+            <label class="switch"><input id="hdrTonemap" type="checkbox" /><span class="switch-track"><i></i></span><span><span data-i18n="hdrTonemap">HDR → SDR tonemapping</span> <span class="tip" data-i18n-tip="hdrTonemapTip">i</span></span></label>
+            <p class="field-hint" data-i18n="timingHint">Frame rate, smoothing and tonemapping apply on "Reprocess Media".</p>
+          </div>
+        </details>
+
+        <details class="group card">
+          <summary>
+            <span class="card-title" data-i18n="output">Output format</span>
+            <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l4 4 4-4" /></svg>
+          </summary>
+          <div class="group-body">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="packOrientation" class="field-label"><span data-i18n="packOrientation">Packing orientation</span> <span class="tip" data-i18n-tip="packTip">i</span></label>
+                <select id="packOrientation" class="field">
+                  <option value="vertical" selected data-i18n="o.packV">Vertical (pages)</option>
+                  <option value="horizontal" data-i18n="o.packH">Horizontal</option>
+                </select>
+              </div>
+              <div>
+                <label for="bitOrder" class="field-label"><span data-i18n="bitOrder">Bit order</span> <span class="tip" data-i18n-tip="bitOrderTip">i</span></label>
+                <select id="bitOrder" class="field">
+                  <option value="lsb" selected data-i18n="o.lsb">LSB first</option>
+                  <option value="msb" data-i18n="o.msb">MSB first</option>
+                </select>
+              </div>
+            </div>
+            <label class="switch"><input id="invertColors" type="checkbox" /><span class="switch-track"><i></i></span><span><span data-i18n="invert">Invert colors</span> <span class="tip" data-i18n-tip="invertTip">i</span></span></label>
+            <div>
+              <label for="varName" class="field-label"><span data-i18n="varName">C++ variable name</span> <span class="tip" data-i18n-tip="varNameTip">i</span></label>
+              <input id="varName" type="text" value="oled_animation" class="text font-mono" spellcheck="false" />
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="space-y-4 lg:col-span-7">
+        <div class="card p-4 sm:p-5">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 class="card-title" data-i18n="preview">Preview</h2>
+            <p id="playerStatus" class="font-mono text-xs text-cyber">Frame: 0/0 | Paused</p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="scanline relative rounded-xl border border-line bg-black/60 p-3">
+              <p class="mb-2 text-[11px] uppercase tracking-wider text-slate-500" data-i18n="source">Source</p>
+              <canvas id="originalCanvas" width="128" height="64" class="oled-glow mx-auto block max-w-full"></canvas>
+            </div>
+            <div class="oled-sim scanline relative rounded-xl border border-cyber/30 bg-black p-3" style="box-shadow: 0 0 30px rgba(0,255,153,0.08)">
+              <p class="mb-2 text-[11px] uppercase tracking-wider text-cyber" data-i18n="oledOut">OLED output · 128×64</p>
+              <canvas id="oledCanvas" width="512" height="256" class="oled-glow mx-auto block max-w-full"></canvas>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-xl border border-line bg-black/50 p-3">
+            <div class="flex items-center gap-2">
+              <button id="stepBackBtn" class="btn btn-ghost btn-sm" disabled>◀</button>
+              <div class="min-w-0 flex-1">
+                <div class="slider-head"><span class="text-[11px] text-slate-500"><span data-i18n="frameLbl">Frame</span> <span id="frameVal" class="badge">0</span></span></div>
+                <input id="frameIndex" type="range" class="slider" min="0" max="0" value="0" />
+              </div>
+              <button id="stepForwardBtn" class="btn btn-ghost btn-sm" disabled>▶</button>
+              <button id="playPauseBtn" class="btn btn-cyber btn-sm w-28" disabled data-i18n="btn.play">Play</button>
+            </div>
+          </div>
+
+          <p id="stats" class="mt-3 font-mono text-[11px] text-slate-500">Frames: 0 | Flash: 0 B (0.00 KB) | RAM est.: 0 B | Process: 0.00 ms/frame</p>
         </div>
 
-        <div class="bg-panel border border-line rounded-xl p-4">
-          <h2 class="font-semibold text-cyber mb-3">Exports</h2>
-          <label class="block text-sm mb-3">
-            <span class="text-slate-300">C++ Variable Name</span>
-            <input id="varName" type="text" value="oled_animation" class="mt-1 w-full bg-panelSoft border border-line rounded-md p-2 font-mono" />
-          </label>
-          <div class="flex flex-wrap gap-2 mb-3">
-            <button id="downloadHeaderBtn" class="px-3 py-2 rounded-md bg-cyber text-black font-semibold disabled:opacity-50" disabled>Download C++ Header</button>
-            <button id="downloadBinBtn" class="px-3 py-2 rounded-md border border-cyber text-cyber disabled:opacity-50" disabled>Download BIN</button>
-            <button id="copyHeaderBtn" class="px-3 py-2 rounded-md border border-slate-500 text-slate-200 disabled:opacity-50" disabled>Copy C++ to Clipboard</button>
+        <div class="card p-4 sm:p-5">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 class="card-title" data-i18n="generate">Generate</h2>
+              <p class="mt-1 text-xs text-slate-500" data-i18n="genNote">Preview and exported bytes are identical, bit for bit.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="downloadHeaderBtn" class="btn btn-ghost btn-sm" disabled data-i18n="btn.downloadH">Download .h</button>
+              <button id="downloadBinBtn" class="btn btn-cyber btn-sm" disabled data-i18n="btn.downloadBin">Download .bin</button>
+              <button id="copyHeaderBtn" class="btn btn-ghost btn-sm" disabled data-i18n="btn.copy">Copy C++ code</button>
+            </div>
           </div>
+
+          <button id="convertBtn" class="btn btn-primary btn-lg w-full">
+            <span data-i18n="btn.generate">Generate export frames</span>
+            <span class="tip" data-i18n-tip="tip.generate">i</span>
+          </button>
+
           <textarea
             id="headerPreview"
-            class="w-full h-60 bg-black border border-line rounded-lg p-3 text-xs font-mono text-slate-200"
-            placeholder="Header output will appear here..."
+            class="mt-3 h-52 w-full rounded-xl border border-line bg-black p-3 font-mono text-[11px] leading-relaxed text-slate-300"
+            placeholder="Generated C++ header will appear here…"
+            data-i18n-ph="ph.header"
           ></textarea>
         </div>
 
-        <div class="bg-panel border border-line rounded-xl p-4">
-          <h2 class="font-semibold text-cyber mb-3">Processing Log</h2>
-          <pre id="logWindow" class="w-full h-40 bg-black border border-line rounded-lg p-3 text-xs font-mono text-slate-300 overflow-auto"></pre>
-        </div>
+        <details class="group card">
+          <summary>
+            <span class="card-title" data-i18n="log">Activity log</span>
+            <svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l4 4 4-4" /></svg>
+          </summary>
+          <div class="group-body">
+            <pre id="logWindow" class="h-32 w-full overflow-auto rounded-xl border border-line bg-black p-3 font-mono text-[11px] leading-relaxed text-slate-400"></pre>
+          </div>
+        </details>
       </div>
     </section>
   </main>
@@ -234,6 +660,8 @@
     const OLED_W = 128;
     const OLED_H = 64;
     const BYTES_PER_FRAME = (OLED_W * OLED_H) / 8;
+    const EXTRACT_CAP = 384;
+    const HYSTERESIS_T = 8;
 
     const els = {
       fileInput: document.getElementById("fileInput"),
@@ -242,6 +670,13 @@
       ffmpegStatus: document.getElementById("ffmpegStatus"),
       scalingMode: document.getElementById("scalingMode"),
       ditherAlgo: document.getElementById("ditherAlgo"),
+      lumModel: document.getElementById("lumModel"),
+      serpentine: document.getElementById("serpentine"),
+      autoLevels: document.getElementById("autoLevels"),
+      flicker: document.getElementById("flicker"),
+      bgFill: document.getElementById("bgFill"),
+      motionSmooth: document.getElementById("motionSmooth"),
+      hdrTonemap: document.getElementById("hdrTonemap"),
       fpsSelect: document.getElementById("fpsSelect"),
       brightness: document.getElementById("brightness"),
       contrast: document.getElementById("contrast"),
@@ -251,6 +686,8 @@
       contrastVal: document.getElementById("contrastVal"),
       ditherVal: document.getElementById("ditherVal"),
       thresholdVal: document.getElementById("thresholdVal"),
+      detailBoost: document.getElementById("detailBoost"),
+      detailBoostVal: document.getElementById("detailBoostVal"),
       packOrientation: document.getElementById("packOrientation"),
       bitOrder: document.getElementById("bitOrder"),
       invertColors: document.getElementById("invertColors"),
@@ -275,8 +712,10 @@
 
     const originalCtx = els.originalCanvas.getContext("2d", { willReadFrequently: true });
     const oledCtx = els.oledCanvas.getContext("2d", { willReadFrequently: true });
-    originalCtx.imageSmoothingEnabled = false;
-    oledCtx.imageSmoothingEnabled = false;
+    originalCtx.imageSmoothingEnabled = true;
+    originalCtx.imageSmoothingQuality = "high";
+    oledCtx.imageSmoothingEnabled = true;
+    oledCtx.imageSmoothingQuality = "high";
 
     let ffmpeg = null;
     let ffmpegReady = false;
@@ -290,9 +729,326 @@
     let rafId = null;
     let lastTick = 0;
     let lastProcessMsPerFrame = 0;
+    let frameDurationsMs = [];
+    let pipelineCanvas = null;
+    let pipelineCtx = null;
+    let sequenceMonos = [];
+    let sequenceDirty = true;
+    let autoFpsAdjusting = false;
+    let currentLang = "en";
+    let lastStatusKey = "idle";
+    let lastStatusVars = null;
 
-    function setStatus(text) {
-      els.ffmpegStatus.textContent = `FFmpeg: ${text}`;
+    const I18N = {
+      en: {
+        "brand.studio": "Studio",
+        tagline: "Turn videos, GIFs and images into SSD1306-ready frames — 100% in your browser.",
+        noscript: "JavaScript is disabled in this browser.",
+        media: "Media",
+        picture: "Picture",
+        timing: "Timing & Motion",
+        output: "Output format",
+        log: "Activity log",
+        preview: "Preview",
+        generate: "Generate",
+        "dz.title": "Drop media here, or click to browse",
+        "dz.sub": "MP4 · GIF · WEBM · JPEG · PNG",
+        noFile: "No file selected.",
+        "btn.reprocess": "↻ Reprocess Media",
+        "btn.reprocessTip": "Re-runs FFmpeg extraction. Required after changing frame rate, motion smoothing or tonemapping.",
+        "btn.generate": "Generate export frames",
+        "tip.generate": "Builds the packed export frames (identical to the preview) and fills the code preview below. Then download or copy.",
+        "btn.downloadH": "Download .h",
+        "btn.downloadBin": "Download .bin",
+        "btn.copy": "Copy C++ code",
+        "btn.copied": "Copied!",
+        "btn.play": "Play",
+        "btn.pause": "Pause",
+        "frameLbl": "Frame",
+        genNote: "Preview and exported bytes are identical, bit for bit.",
+        source: "Source",
+        oledOut: "OLED output · 128×64",
+        dithering: "Dithering",
+        ditheringTip: "Algorithm that converts grayscale into a 1-bit image. Error diffusion looks smooth and natural; Bayer and Blue Noise add a crisp, film-like grain.",
+        scaling: "Scaling",
+        scalingTip: "How the source is mapped onto the 128x64 OLED grid. Fit keeps the whole picture visible, Fill crops to cover the screen, Stretch distorts to fill it.",
+        dither: "Dither strength",
+        ditherTip: "Strength of the dithering effect. Lower flattens the image, higher adds grain. 0 acts as a plain threshold cut.",
+        threshold: "Threshold",
+        thresholdTip: "Gray value (0-255) at which a pixel flips on. Lower it to keep more shadow detail.",
+        brightness: "Brightness",
+        brightnessTip: "Global brightness shift applied before conversion.",
+        contrast: "Contrast",
+        contrastTip: "Stretches the tonal range for a punchier result.",
+        detailBoost: "Detail boost",
+        detailBoostTip: "Unsharp masking strength. Restores fine edges lost in downscaling; too high creates halos.",
+        serpentine: "Serpentine",
+        serpentineTip: "Alternates the dither scan direction every row, removing diagonal smear in error diffusion.",
+        autoLevels: "Auto-levels",
+        autoLevelsTip: "Expands black and white points to the frame real range, improving low-contrast footage.",
+        flicker: "Flicker reduction",
+        flickerTip: "Holds stable pixels steady between frames (temporal hysteresis) so animation does not shimmer.",
+        lumModel: "Luminance model",
+        lumModelTip: "How RGB colors become brightness. Perceptual sRGB is most accurate; Rec.601 and Rec.709 are broadcast standards.",
+        fill: "Transparent fill",
+        fillTip: "Color used under transparent areas before dithering.",
+        fps: "Target frame rate",
+        fpsTip: "Frames kept per second. On low-motion video the tool auto-reduces this to save flash space.",
+        motionSmooth: "Motion smoothing",
+        motionSmoothTip: "Generates interpolated in-between frames for video (FFmpeg minterpolate). Higher = smoother motion but more frames to store.",
+        hdrTonemap: "HDR → SDR tonemapping",
+        hdrTonemapTip: "Compresses HDR highlights into SDR range so bright areas do not blow out. Detected automatically on HDR video.",
+        invert: "Invert colors",
+        invertTip: "Flips black and white output.",
+        packOrientation: "Packing orientation",
+        packTip: "How pixels map into bytes. Vertical uses SSD1306 page addressing; Horizontal stores rows left to right.",
+        bitOrder: "Bit order",
+        bitOrderTip: "Order of bits inside each byte. MSB first is the Adafruit_SSD1306 standard; LSB first suits many other libraries.",
+        varName: "C++ variable name",
+        varNameTip: "Name of the generated array (oled_animation_data). Keep it a valid C identifier.",
+        timingHint: 'Frame rate, smoothing and tonemapping apply on "Reprocess Media".',
+        "ph.header": "Generated C++ header will appear here…",
+        "o.floyd": "Floyd-Steinberg",
+        "o.jarvis": "Jarvis",
+        "o.stucki": "Stucki",
+        "o.atkinson": "Atkinson",
+        "o.burkes": "Burkes",
+        "o.sierra": "Sierra",
+        "o.bayer4": "Bayer 4×4",
+        "o.bayer8": "Bayer 8×8",
+        "o.blue": "Blue Noise",
+        "o.none": "None (hard threshold)",
+        "o.fit": "Fit",
+        "o.fill": "Fill (crop)",
+        "o.stretch": "Stretch",
+        "o.srgb": "Perceptual sRGB",
+        "o.rec709": "Rec.709",
+        "o.rec601": "Rec.601",
+        "o.black": "Black",
+        "o.white": "White",
+        "o.off": "Off",
+        "o.smooth2": "2× smooth",
+        "o.smooth4": "4× extra smooth",
+        "o.packV": "Vertical (pages)",
+        "o.packH": "Horizontal",
+        "o.lsb": "LSB first",
+        "o.msb": "MSB first",
+        "st.idle": "idle",
+        "st.loading": "loading...",
+        "st.ready": "ready",
+        "st.extracting": "extracting @ {fps} FPS{extra}",
+        "st.smoothTag": " + motion smoothing",
+        "st.readyFrames": "ready ({count} frames)",
+        "st.error": "error: {msg}",
+        "st.playing": "Playing",
+        "st.paused": "Paused",
+        "stat.frames": "Frames",
+        "stat.frame": "Frame",
+        "stat.flash": "Flash",
+        "stat.ram": "RAM est.",
+        "stat.process": "Process",
+        "stat.frameUnit": "frame",
+        "log.init": "System initialized. Awaiting media input.",
+        "log.selected": "Selected: {name} ({size} KB)",
+        "log.loaded": 'Loaded file "{name}" with {n} frame(s).',
+        "log.extracted": "Extracted {n} frames at {fps} FPS using FFmpeg{suffix}.",
+        "log.gifSuffix": " (original GIF timing preserved)",
+        "log.autofps": "Auto-tuned frame rate: {fps} FPS (measured motion {motion}/255). Low-motion content needs fewer frames for the same look.",
+        "log.hdr": "HDR video detected — HDR → SDR tonemapping enabled automatically.",
+        "log.minterpFail": "Motion smoothing not available in this FFmpeg build; falling back to uniform frame rate.",
+        "log.tonemapFail": "Tonemapping not available in this FFmpeg build; falling back to direct conversion.",
+        "log.reprocess": "Reprocess requested. Restarting extraction from frame 1.",
+        "log.error": "Error while processing file: {msg}",
+        "log.exported": "Export frames generated: {n} frames, {ms} ms total.",
+        "log.headerReady": 'Header and BIN prepared with variable "{name}".',
+        "log.frame": "Frame {f}/{n} processed using {dither} dithering.",
+        "log.fpsHint": 'FPS changed. Click "{btn}" to re-extract frames at the new rate.',
+        "log.smoothHint": 'Motion smoothing changed. Click "{btn}" to re-extract frames.',
+        "log.tonemapHint": 'HDR tonemapping changed. Click "{btn}" to re-extract frames.',
+        docTitle: "OLED Media Studio — GIF/Video → SSD1306",
+      },
+      ru: {
+        "brand.studio": "Студия",
+        tagline: "Превращайте видео, GIF и изображения в готовые кадры для SSD1306 — на 100% в вашем браузере.",
+        noscript: "В этом браузере отключён JavaScript.",
+        media: "Файл",
+        picture: "Изображение",
+        timing: "Время и движение",
+        output: "Формат вывода",
+        log: "Журнал",
+        preview: "Предпросмотр",
+        generate: "Экспорт",
+        "dz.title": "Перетащите файл сюда или нажмите для выбора",
+        "dz.sub": "MP4 · GIF · WEBM · JPEG · PNG",
+        noFile: "Файл не выбран.",
+        "btn.reprocess": "↻ Повторить обработку",
+        "btn.reprocessTip": "Заново запускает извлечение кадров FFmpeg. Нужно после смены FPS, сглаживания или тонамаппинга.",
+        "btn.generate": "Сформировать кадры экспорта",
+        "tip.generate": "Собирает упакованные кадры экспорта (идентичны предпросмотру) и заполняет окно кода ниже. Затем можно скачать или скопировать.",
+        "btn.downloadH": "Скачать .h",
+        "btn.downloadBin": "Скачать .bin",
+        "btn.copy": "Копировать код C++",
+        "btn.copied": "Скопировано!",
+        "btn.play": "Пуск",
+        "btn.pause": "Пауза",
+        "frameLbl": "Кадр",
+        genNote: "Предпросмотр и экспорт бит в бит совпадают.",
+        source: "Исходник",
+        oledOut: "Вывод OLED · 128×64",
+        dithering: "Дитеря",
+        ditheringTip: "Алгоритм превращения полутонов в 1-битное изображение. Error diffusion даёт гладкий естественный вид; Bayer и Blue Noise — чёткое зерно как у плёнки.",
+        scaling: "Масштаб",
+        scalingTip: "Как исходник укладывается в сетку 128×64. «Вписать» показывает картинку целиком, «Заполнить» кадрирует под экран, «Растянуть» — растягивает с искажениями.",
+        dither: "Сила дитеринга",
+        ditherTip: "Сила дитеринга. Ниже — более плоская картинка, выше — зерно. 0 работает как простой порог.",
+        threshold: "Порог",
+        thresholdTip: "Яркость (0–255), при которой пиксель включается. Уменьшайте, чтобы сохранить детали в тенях.",
+        brightness: "Яркость",
+        brightnessTip: "Глобальный сдвиг яркости перед конвертацией.",
+        contrast: "Контраст",
+        contrastTip: "Растягивает тональный диапазон для более сочного результата.",
+        detailBoost: "Детализация",
+        detailBoostTip: "Сила нерезкого маскирования. Восстанавливает тонкие края после уменьшения; завышение даёт ореолы.",
+        serpentine: "Змейка",
+        serpentineTip: "Меняет направление развёртки дитеринга в каждом ряду — убирает диагональные смазы.",
+        autoLevels: "Автоуровень",
+        autoLevelsTip: "Расширяет чёрную и белую точки до реального диапазона кадра, улучшая контраст.",
+        flicker: "Подавление мерцания",
+        flickerTip: "Удерживает стабильные пиксели между кадрами (временной гистерезис), чтобы анимация не мерцала.",
+        lumModel: "Модель яркости",
+        lumModelTip: "Как RGB превращается в яркость. Perceptual sRGB точнее всего; Rec.601 и Rec.709 — вещательные стандарты.",
+        fill: "Заливка прозрачного",
+        fillTip: "Цвет под прозрачными областями до дитеринга.",
+        fps: "Целевой FPS",
+        fpsTip: "Сколько кадров в секунду сохранять. На спокойном видео инструмент сам снижает частоту для экономии флеша.",
+        motionSmooth: "Сглаживание движения",
+        motionSmoothTip: "Генерирует промежуточные кадры для видео (минтерполяция FFmpeg). Больше — плавнее, но и кадров для хранения больше.",
+        hdrTonemap: "Тонамаппинг HDR → SDR",
+        hdrTonemapTip: "Сжимает HDR-блики в SDR-диапазон, чтобы яркие области не выбивались в белое. Определяется автоматически.",
+        invert: "Инверсия цветов",
+        invertTip: "Инвертирует чёрный и белый.",
+        packOrientation: "Упаковка (ориентация)",
+        packTip: "Как пиксели ложатся в байты. Vertical — страничная адресация SSD1306; Horizontal — ряды слева направо.",
+        bitOrder: "Порядок битов",
+        bitOrderTip: "Порядок битов внутри байта. MSB first — стандарт Adafruit_SSD1306; LSB first подходит для многих других библиотек.",
+        varName: "Имя переменной C++",
+        varNameTip: "Имя генерируемого массива (oled_animation_data). Должно оставаться корректным идентификатором C.",
+        timingHint: 'FPS, сглаживание и тонамаппинг применяются кнопкой «Повторить обработку».',
+        "ph.header": "Здесь появится сгенерированный C++-заголовок…",
+        "o.floyd": "Флойд-Стейнберг",
+        "o.jarvis": "Джарвис",
+        "o.stucki": "Стаки",
+        "o.atkinson": "Аткинсон",
+        "o.burkes": "Бёркс",
+        "o.sierra": "Сьерра",
+        "o.bayer4": "Байер 4×4",
+        "o.bayer8": "Байер 8×8",
+        "o.blue": "Blue Noise",
+        "o.none": "Нет (жёсткий порог)",
+        "o.fit": "Вписать",
+        "o.fill": "Заполнить (кадрир.)",
+        "o.stretch": "Растянуть",
+        "o.srgb": "Perceptual sRGB",
+        "o.rec709": "Rec.709",
+        "o.rec601": "Rec.601",
+        "o.black": "Чёрный",
+        "o.white": "Белый",
+        "o.off": "Выкл",
+        "o.smooth2": "2× плавно",
+        "o.smooth4": "4× экстра плавно",
+        "o.packV": "Вертикально (страницы)",
+        "o.packH": "Горизонтально",
+        "o.lsb": "LSB первым",
+        "o.msb": "MSB первым",
+        "st.idle": "ожидание",
+        "st.loading": "загрузка...",
+        "st.ready": "готов",
+        "st.extracting": "извлечение @ {fps} FPS{extra}",
+        "st.smoothTag": " + интерполяция",
+        "st.readyFrames": "готово ({count} кадров)",
+        "st.error": "ошибка: {msg}",
+        "st.playing": "Играет",
+        "st.paused": "Пауза",
+        "stat.frames": "Кадры",
+        "stat.frame": "Кадр",
+        "stat.flash": "Flash",
+        "stat.ram": "RAM прибл.",
+        "stat.process": "Обработка",
+        "stat.frameUnit": "кадр",
+        "log.init": "Система инициализирована. Ожидание файла.",
+        "log.selected": "Выбрано: {name} ({size} КБ)",
+        "log.loaded": 'Загружен файл «{name}»: {n} кадр(ов).',
+        "log.extracted": "Извлечено {n} кадров при {fps} FPS через FFmpeg{suffix}.",
+        "log.gifSuffix": " (сохранён исходный тайминг GIF)",
+        "log.autofps": "Автоматически выбрана частота: {fps} FPS (движение {motion}/255). Спокойному контенту нужно меньше кадров.",
+        "log.hdr": "Обнаружено HDR-видео — тонамаппинг включён автоматически.",
+        "log.minterpFail": "Интерполяция недоступна в этой сборке FFmpeg; откат к равномерной частоте.",
+        "log.tonemapFail": "Тонамаппинг недоступен в этой сборке FFmpeg; откат к прямой конвертации.",
+        "log.reprocess": "Запрошена повторная обработка. Перезапуск извлечения кадров.",
+        "log.error": "Ошибка при обработке файла: {msg}",
+        "log.exported": "Кадры экспорта созданы: {n} кадров, {ms} мс.",
+        "log.headerReady": 'Заголовок и BIN подготовлены с переменной "{name}".',
+        "log.frame": "Кадр {f}/{n} обработан, дитеря: {dither}.",
+        "log.fpsHint": 'Частота изменена. Нажмите «{btn}», чтобы переизвлечь кадры.',
+        "log.smoothHint": 'Сглаживание изменено. Нажмите «{btn}», чтобы переизвлечь кадры.',
+        "log.tonemapHint": 'Тонамаппинг изменён. Нажмите «{btn}», чтобы переизвлечь кадры.',
+        docTitle: "OLED Media Studio — GIF/видео → SSD1306",
+      },
+    };
+
+    function tr(key, vars) {
+      let s = (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
+      if (vars) {
+        for (const k of Object.keys(vars)) {
+          const token = "{" + k + "}";
+          s = s.split(token).join(String(vars[k]));
+        }
+      }
+      return s;
+    }
+
+    function applyLanguage() {
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        el.textContent = tr(el.getAttribute("data-i18n"));
+      });
+      document.querySelectorAll("[data-i18n-tip]").forEach((el) => {
+        el.setAttribute("data-tip", tr(el.getAttribute("data-i18n-tip")));
+      });
+      document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+        el.setAttribute("placeholder", tr(el.getAttribute("data-i18n-ph")));
+      });
+      if (els.playPauseBtn) {
+        els.playPauseBtn.textContent = isPlaying ? tr("btn.pause") : tr("btn.play");
+      }
+      if (els.copyHeaderBtn && !els.copyHeaderBtn.disabled && els.copyHeaderBtn.textContent.indexOf("Copied") !== -1) {
+        els.copyHeaderBtn.textContent = tr("btn.copy");
+      }
+      if (currentFile) {
+        els.fileMeta.textContent = tr("log.selected", {
+          name: currentFile.name,
+          size: (currentFile.size / 1024).toFixed(1),
+        });
+      }
+      updatePlayerStatus();
+      updateStats();
+      setStatus(lastStatusKey, lastStatusVars);
+    }
+
+    function setLang(lang) {
+      currentLang = lang === "ru" ? "ru" : "en";
+      document.documentElement.lang = currentLang;
+      document.title = tr("docTitle");
+      localStorage.setItem("oled_lang", currentLang);
+      document.querySelectorAll(".lang-pill").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.lang === currentLang);
+      });
+      applyLanguage();
+    }
+
+    function setStatus(key, vars) {
+      lastStatusKey = key;
+      lastStatusVars = vars;
+      els.ffmpegStatus.textContent = `FFmpeg: ${tr(`st.${key}`, vars)}`;
     }
 
     function appendLog(message) {
@@ -309,7 +1065,7 @@
       if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
         throw new Error("FFmpeg library failed to load from CDN.");
       }
-      setStatus("loading...");
+      setStatus("loading");
       ffmpeg = window.FFmpeg.createFFmpeg({
         log: false,
         corePath: "https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js",
@@ -329,13 +1085,14 @@
       return ["mp4", "gif", "webm", "mov", "mkv"].includes(ext);
     }
 
-    function drawScaledFrame(ctx, imageLike, mode) {
+    function drawScaledFrame(ctx, imageLike, mode, bgFill) {
       const cw = OLED_W;
       const ch = OLED_H;
       const iw = imageLike.width;
       const ih = imageLike.height;
-      ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = "#000";
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.fillStyle = bgFill === "white" ? "#fff" : "#000";
       ctx.fillRect(0, 0, cw, ch);
 
       if (mode === "stretch") {
@@ -351,12 +1108,34 @@
       ctx.drawImage(imageLike, dx, dy, dw, dh);
     }
 
+    function srgbToLinear8(c) {
+      const v = c / 255;
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    }
+
+    function srgbFromLinear(v) {
+      const c = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+      return Math.max(0, Math.min(255, c * 255));
+    }
+
     function applyBrightnessContrast(gray, brightness, contrast) {
       const b = brightness * 2.55;
-      const c = contrast;
+      const c = contrast * 2.55;
       const factor = (259 * (c + 255)) / (255 * (259 - c));
       const value = factor * (gray - 128) + 128 + b;
       return Math.max(0, Math.min(255, value));
+    }
+
+    function toLuma(r, g, b) {
+      const mode = els.lumModel.value;
+      if (mode === "srgb") {
+        const rl = srgbToLinear8(r);
+        const gl = srgbToLinear8(g);
+        const bl = srgbToLinear8(b);
+        return srgbFromLinear(0.2126 * rl + 0.7152 * gl + 0.0722 * bl);
+      }
+      if (mode === "rec709") return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      return 0.299 * r + 0.587 * g + 0.114 * b;
     }
 
     function buildGrayBuffer(imageData, brightness, contrast) {
@@ -366,83 +1145,207 @@
       const gray = new Float32Array(w * h);
 
       for (let i = 0, p = 0; i < gray.length; i++, p += 4) {
-        const g = 0.299 * src[p] + 0.587 * src[p + 1] + 0.114 * src[p + 2];
-        gray[i] = applyBrightnessContrast(g, brightness, contrast);
+        gray[i] = applyBrightnessContrast(toLuma(src[p], src[p + 1], src[p + 2]), brightness, contrast);
       }
       return gray;
     }
 
-    function ditherFloydSteinbergToMono(gray, w, h, intensity) {
-      const mono = new Uint8Array(w * h);
-      for (let y = 0; y < h; y++) {
-        const row = y * w;
-        for (let x = 0; x < w; x++) {
-          const idx = row + x;
-          const oldVal = gray[idx];
-          const newVal = oldVal >= 128 ? 255 : 0;
-          mono[idx] = newVal ? 1 : 0;
-          const err = (oldVal - newVal) * intensity;
-
-          if (x + 1 < w) gray[idx + 1] += err * (7 / 16);
-          if (y + 1 < h) {
-            if (x > 0) gray[idx + w - 1] += err * (3 / 16);
-            gray[idx + w] += err * (5 / 16);
-            if (x + 1 < w) gray[idx + w + 1] += err * (1 / 16);
-          }
-        }
+    function autoLevels(gray) {
+      const hist = new Uint32Array(256);
+      for (let i = 0; i < gray.length; i++) {
+        let v = Math.round(gray[i]);
+        if (v < 0) v = 0; else if (v > 255) v = 255;
+        hist[v]++;
       }
-      return mono;
+      const total = gray.length;
+      const clip = Math.max(1, Math.floor(total * 0.005));
+      let lo = 0, acc = 0;
+      for (; lo < 256; lo++) { acc += hist[lo]; if (acc >= clip) break; }
+      let hi = 255; acc = 0;
+      for (; hi >= 0; hi--) { acc += hist[hi]; if (acc >= clip) break; }
+      if (hi <= lo) return;
+      const scale = 255 / (hi - lo);
+      for (let i = 0; i < gray.length; i++) {
+        gray[i] = Math.max(0, Math.min(255, (gray[i] - lo) * scale));
+      }
     }
 
-    function ditherAtkinsonToMono(gray, w, h, intensity) {
-      const mono = new Uint8Array(w * h);
+    function unsharpMask(gray, w, h, amount) {
+      if (amount <= 0.001) return gray;
+      const src = gray;
+      const edge = new Float32Array(gray.length);
       for (let y = 0; y < h; y++) {
-        const row = y * w;
         for (let x = 0; x < w; x++) {
-          const idx = row + x;
-          const oldVal = gray[idx];
-          const newVal = oldVal >= 128 ? 255 : 0;
-          mono[idx] = newVal ? 1 : 0;
-          const err = ((oldVal - newVal) / 8) * intensity;
-
-          if (x + 1 < w) gray[idx + 1] += err;
-          if (x + 2 < w) gray[idx + 2] += err;
-          if (y + 1 < h) {
-            if (x > 0) gray[idx + w - 1] += err;
-            gray[idx + w] += err;
-            if (x + 1 < w) gray[idx + w + 1] += err;
+          const i = y * w + x;
+          let sum = 0;
+          let count = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            const ny = y + dy;
+            if (ny < 0 || ny >= h) continue;
+            for (let dx = -1; dx <= 1; dx++) {
+              const nx = x + dx;
+              if (nx < 0 || nx >= w) continue;
+              sum += src[ny * w + nx];
+              count++;
+            }
           }
-          if (y + 2 < h) gray[idx + 2 * w] += err;
+          edge[i] = src[i] - sum / count;
         }
       }
-      return mono;
+      for (let i = 0; i < gray.length; i++) {
+        gray[i] = Math.max(0, Math.min(255, gray[i] + amount * edge[i]));
+      }
+      return gray;
     }
 
-    function ditherStuckiToMono(gray, w, h, intensity) {
-      const mono = new Uint8Array(w * h);
-      const spread = [
+    const DITHER_KERNELS = {
+      floyd: [[1, 0, 7 / 16], [-1, 1, 3 / 16], [0, 1, 5 / 16], [1, 1, 1 / 16]],
+      atkinson: [[1, 0, 1 / 8], [2, 0, 1 / 8], [-1, 1, 1 / 8], [0, 1, 1 / 8], [1, 1, 1 / 8], [0, 2, 1 / 8]],
+      stucki: [
         [1, 0, 8 / 42], [2, 0, 4 / 42],
         [-2, 1, 2 / 42], [-1, 1, 4 / 42], [0, 1, 8 / 42], [1, 1, 4 / 42], [2, 1, 2 / 42],
         [-2, 2, 1 / 42], [-1, 2, 2 / 42], [0, 2, 4 / 42], [1, 2, 2 / 42], [2, 2, 1 / 42],
-      ];
+      ],
+      jarvis: [
+        [1, 0, 7 / 48], [2, 0, 5 / 48],
+        [-2, 1, 3 / 48], [-1, 1, 5 / 48], [0, 1, 7 / 48], [1, 1, 5 / 48], [2, 1, 3 / 48],
+        [-2, 2, 1 / 48], [-1, 2, 3 / 48], [0, 2, 5 / 48], [1, 2, 3 / 48], [2, 2, 1 / 48],
+      ],
+      burkes: [
+        [1, 0, 8 / 32], [2, 0, 4 / 32],
+        [-2, 1, 2 / 32], [-1, 1, 4 / 32], [0, 1, 8 / 32], [1, 1, 4 / 32], [2, 1, 2 / 32],
+      ],
+      sierra: [
+        [1, 0, 5 / 32], [2, 0, 3 / 32],
+        [-2, 1, 2 / 32], [-1, 1, 4 / 32], [0, 1, 5 / 32], [1, 1, 4 / 32], [2, 1, 2 / 32],
+        [-1, 2, 2 / 32], [0, 2, 3 / 32], [1, 2, 2 / 32],
+      ],
+    };
 
+    function diffuseToMono(gray, w, h, intensity, threshold, kernel, serpentine) {
+      const mono = new Uint8Array(w * h);
       for (let y = 0; y < h; y++) {
         const row = y * w;
-        for (let x = 0; x < w; x++) {
+        const dir = serpentine && (y & 1) ? -1 : 1;
+        for (let x = dir === 1 ? 0 : w - 1; dir === 1 ? x < w : x >= 0; x += dir) {
           const idx = row + x;
           const oldVal = gray[idx];
-          const newVal = oldVal >= 128 ? 255 : 0;
+          const newVal = oldVal >= threshold ? 255 : 0;
           mono[idx] = newVal ? 1 : 0;
           const err = (oldVal - newVal) * intensity;
 
-          for (const [dx, dy, weight] of spread) {
-            const nx = x + dx;
+          for (const [dx, dy, weight] of kernel) {
+            const nx = x + dx * dir;
             const ny = y + dy;
             if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
               gray[ny * w + nx] += err * weight;
             }
           }
         }
+      }
+      return mono;
+    }
+
+    function bayerMatrixInternal(n) {
+      if (n === 1) return [[0]];
+      const h = n / 2;
+      const base = bayerMatrixInternal(h);
+      const m = [];
+      for (let i = 0; i < n; i++) m.push(new Array(n));
+      for (let i = 0; i < h; i++) {
+        for (let j = 0; j < h; j++) {
+          const v = base[i][j] * 4;
+          m[i][j] = v;
+          m[i][j + h] = v + 2;
+          m[i + h][j] = v + 3;
+          m[i + h][j + h] = v + 1;
+        }
+      }
+      return m;
+    }
+
+    let BAYER4_CACHE = null;
+    let BAYER8_CACHE = null;
+
+    function orderedBayerToMono(gray, w, h, size, intensity, threshold) {
+      const matrix = size === 4
+        ? (BAYER4_CACHE = BAYER4_CACHE || bayerMatrixInternal(4))
+        : (BAYER8_CACHE = BAYER8_CACHE || bayerMatrixInternal(8));
+      const levels = size * size;
+      const mono = new Uint8Array(w * h);
+      for (let y = 0; y < h; y++) {
+        const row = y * w;
+        for (let x = 0; x < w; x++) {
+          const v = matrix[y % size][x % size];
+          const bias = (v / (levels - 1) - 0.5) * 200 * intensity;
+          mono[row + x] = gray[row + x] >= threshold + bias ? 1 : 0;
+        }
+      }
+      return mono;
+    }
+
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function () {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    let BLUE_NOISE_CACHE = null;
+
+    function generateBlueNoiseMask(w, h) {
+      const n = w * h;
+      const rng = mulberry32(0x0de10caf);
+      const energy = new Float32Array(n);
+      for (let i = 0; i < n; i++) energy[i] = rng() * 1e-4;
+
+      const sigma = 1.5;
+      const radius = 3;
+      const kernel = [];
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          kernel.push({ dx, dy, wgt: Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma)) });
+        }
+      }
+
+      const mask = new Float32Array(n);
+      for (let added = 0; added < n; added++) {
+        let bestIdx = 0;
+        let bestVal = Infinity;
+        for (let i = 0; i < n; i++) {
+          const v = energy[i];
+          if (v < bestVal) {
+            bestVal = v;
+            bestIdx = i;
+          }
+        }
+        mask[bestIdx] = added / (n - 1);
+        const cx = bestIdx % w;
+        const cy = (bestIdx / w) | 0;
+        for (const k of kernel) {
+          const tx = (cx + k.dx + w) % w;
+          const ty = (cy + k.dy + h) % h;
+          energy[ty * w + tx] += k.wgt;
+        }
+        energy[bestIdx] = Infinity;
+      }
+      return mask;
+    }
+
+    function getBlueNoiseMask() {
+      if (!BLUE_NOISE_CACHE) BLUE_NOISE_CACHE = generateBlueNoiseMask(OLED_W, OLED_H);
+      return BLUE_NOISE_CACHE;
+    }
+
+    function blueNoiseToMono(gray, w, h, intensity, threshold) {
+      const mask = getBlueNoiseMask();
+      const mono = new Uint8Array(w * h);
+      for (let i = 0; i < gray.length; i++) {
+        mono[i] = gray[i] >= threshold + (mask[i] - 0.5) * 200 * intensity ? 1 : 0;
       }
       return mono;
     }
@@ -455,10 +1358,15 @@
       return mono;
     }
 
-    function processImageDataToMono(imageData) {
+    function processImageDataToMono(imageData, hystPrev) {
       const w = imageData.width;
       const h = imageData.height;
-      const gray = buildGrayBuffer(imageData, Number(els.brightness.value), Number(els.contrast.value));
+      let gray = buildGrayBuffer(imageData, Number(els.brightness.value), Number(els.contrast.value));
+
+      const detail = Number(els.detailBoost.value) / 100;
+      if (detail > 0) gray = unsharpMask(gray, w, h, detail);
+      if (els.autoLevels.checked) autoLevels(gray);
+
       const algo = els.ditherAlgo.value;
       const intensity = Number(els.dither.value) / 100;
       const threshold = Number(els.threshold.value);
@@ -466,12 +1374,24 @@
       let mono;
       if (algo === "none") {
         mono = thresholdToMono(gray, threshold);
-      } else if (algo === "atkinson") {
-        mono = ditherAtkinsonToMono(gray, w, h, intensity);
-      } else if (algo === "stucki") {
-        mono = ditherStuckiToMono(gray, w, h, intensity);
+      } else if (algo === "bayer4" || algo === "bayer8") {
+        mono = orderedBayerToMono(gray, w, h, algo === "bayer4" ? 4 : 8, intensity, threshold);
+      } else if (algo === "blue") {
+        mono = blueNoiseToMono(gray, w, h, intensity, threshold);
       } else {
-        mono = ditherFloydSteinbergToMono(gray, w, h, intensity);
+        mono = diffuseToMono(gray, w, h, intensity, threshold, DITHER_KERNELS[algo], els.serpentine.checked);
+      }
+
+      if (els.flicker.checked && hystPrev && hystPrev.length === mono.length) {
+        const T = HYSTERESIS_T;
+        const out = new Uint8Array(mono);
+        for (let i = 0; i < mono.length; i++) {
+          const g = gray[i];
+          if (g >= threshold + T) out[i] = 1;
+          else if (g < threshold - T) out[i] = 0;
+          else out[i] = hystPrev[i];
+        }
+        mono = out;
       }
 
       if (els.invertColors.checked) {
@@ -484,9 +1404,8 @@
       const scale = 4;
       const gap = 1;
       const onSize = scale - gap;
-      const playingFadeAlpha = isPlaying ? 0.3 : 1;
 
-      oledCtx.fillStyle = `rgba(2, 5, 4, ${playingFadeAlpha})`;
+      oledCtx.fillStyle = "#020504";
       oledCtx.fillRect(0, 0, els.oledCanvas.width, els.oledCanvas.height);
 
       oledCtx.shadowBlur = 2;
@@ -547,13 +1466,14 @@
       els.contrastVal.textContent = els.contrast.value;
       els.ditherVal.textContent = (Number(els.dither.value) / 100).toFixed(2);
       els.thresholdVal.textContent = els.threshold.value;
+      els.detailBoostVal.textContent = els.detailBoost.value;
       els.frameVal.textContent = String(currentFrameIndex);
     }
 
     function updatePlayerStatus() {
       const total = sourceFrames.length;
       const shown = total ? currentFrameIndex + 1 : 0;
-      els.playerStatus.textContent = `Frame: ${shown}/${total} | ${isPlaying ? "Playing" : "Paused"}`;
+      els.playerStatus.textContent = `${tr("stat.frame")}: ${shown}/${total} | ${isPlaying ? tr("st.playing") : tr("st.paused")}`;
     }
 
     function getFrameDurationMs() {
@@ -561,21 +1481,49 @@
       return 1000 / fps;
     }
 
+    function ensurePipeline() {
+      if (!pipelineCanvas) {
+        pipelineCanvas = document.createElement("canvas");
+        pipelineCanvas.width = OLED_W;
+        pipelineCanvas.height = OLED_H;
+        pipelineCtx = pipelineCanvas.getContext("2d", { willReadFrequently: true });
+        pipelineCtx.imageSmoothingEnabled = true;
+        pipelineCtx.imageSmoothingQuality = "high";
+      }
+      return pipelineCtx;
+    }
+
+    function computeSequenceMonos() {
+      const ctx = ensurePipeline();
+      const scalingMode = els.scalingMode.value;
+      const bgFill = els.bgFill.value;
+      sequenceMonos = [];
+      let hystPrev = null;
+      for (const frame of sourceFrames) {
+        drawScaledFrame(ctx, frame, scalingMode, bgFill);
+        const imageData = ctx.getImageData(0, 0, OLED_W, OLED_H);
+        const mono = processImageDataToMono(imageData, hystPrev);
+        sequenceMonos.push(mono);
+        hystPrev = mono;
+      }
+      sequenceDirty = false;
+      return sequenceMonos;
+    }
+
     function renderFramePreview(index) {
       if (!sourceFrames.length) return;
       currentFrameIndex = Math.max(0, Math.min(index, sourceFrames.length - 1));
       els.frameIndex.value = String(currentFrameIndex);
       const frame = sourceFrames[currentFrameIndex];
-      drawScaledFrame(originalCtx, frame, els.scalingMode.value);
+      drawScaledFrame(originalCtx, frame, els.scalingMode.value, els.bgFill.value);
 
-      const w = els.originalCanvas.width;
-      const h = els.originalCanvas.height;
-      const srcData = originalCtx.getImageData(0, 0, w, h);
-      const start = performance.now();
-      const mono = processImageDataToMono(srcData);
-      lastProcessMsPerFrame = performance.now() - start;
+      if (sequenceDirty) {
+        const start = performance.now();
+        computeSequenceMonos();
+        lastProcessMsPerFrame = (performance.now() - start) / Math.max(1, sourceFrames.length);
+      }
 
-      renderMonoToOledSim(mono);
+      renderMonoToOledSim(sequenceMonos[currentFrameIndex]);
       updateControlLabels();
       updatePlayerStatus();
       updateStats(sourceFrames.length, lastProcessMsPerFrame);
@@ -589,8 +1537,19 @@
       const ramKb = ramEstimate / 1024;
       const ms = typeof msPerFrame === "number" ? msPerFrame : lastProcessMsPerFrame;
       els.stats.textContent =
-        `Frames: ${frames} | Flash: ${total} B (${flashKb.toFixed(2)} KB) | ` +
-        `RAM est.: ${ramEstimate} B (${ramKb.toFixed(2)} KB) | Process: ${ms.toFixed(2)} ms/frame`;
+        `${tr("stat.frames")}: ${frames} | ${tr("stat.flash")}: ${total} B (${flashKb.toFixed(2)} KB) | ` +
+        `${tr("stat.ram")}: ${ramEstimate} B (${ramKb.toFixed(2)} KB) | ${tr("stat.process")}: ${ms.toFixed(2)} ms/${tr("stat.frameUnit")}`;
+    }
+
+    function releaseSourceFrames() {
+      for (const frame of sourceFrames) {
+        try {
+          if (frame && typeof frame.close === "function") frame.close();
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      sourceFrames = [];
     }
 
     async function readImageFileAsBitmap(file) {
@@ -598,61 +1557,313 @@
       return [bitmap];
     }
 
+    async function runExtract(inName, info) {
+      const args = ["-i", inName];
+      if (info) args.push("-vf", info);
+      args.push("frame_%05d.png");
+      try {
+        await ffmpeg.run(...args);
+      } catch (e) {
+        console.error(e);
+      }
+      const files = ffmpeg.FS("readdir", "/")
+        .filter((f) => /^frame_\d+\.png$/.test(f))
+        .sort();
+      const frames = [];
+      for (const name of files) {
+        const data = ffmpeg.FS("readFile", name);
+        const blob = new Blob([data], { type: "image/png" });
+        frames.push(await createImageBitmap(blob));
+        ffmpeg.FS("unlink", name);
+      }
+      return frames;
+    }
+
+    function uniformDurations(count, outFps) {
+      return new Array(count).fill(1000 / outFps);
+    }
+
+    function padDelays(delays, count) {
+      if (delays.length >= count) return delays.slice(0, count);
+      const out = delays.slice();
+      const fallback = out.length ? out[out.length - 1] : 100;
+      while (out.length < count) out.push(fallback);
+      return out;
+    }
+
+    function measureMotion(frames) {
+      if (frames.length < 2) return 0;
+      const cw = 40;
+      const ch = 40;
+      const canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      let total = 0;
+      let pairs = 0;
+      let prev = null;
+      for (const frame of frames) {
+        ctx.drawImage(frame, 0, 0, cw, ch);
+        const data = ctx.getImageData(0, 0, cw, ch).data;
+        const gray = new Float32Array(cw * ch);
+        for (let i = 0; i < cw * ch; i++) {
+          gray[i] = 0.2126 * data[i * 4] + 0.7152 * data[i * 4 + 1] + 0.0722 * data[i * 4 + 2];
+        }
+        if (prev) {
+          let diff = 0;
+          for (let i = 0; i < gray.length; i++) diff += Math.abs(gray[i] - prev[i]);
+          total += diff / gray.length;
+          pairs += 1;
+        }
+        prev = gray;
+      }
+      return pairs ? total / pairs : 0;
+    }
+
+    function autoFps(chosen, motion) {
+      if (motion < 1.6) return 1;
+      if (motion < 4.0) return Math.min(chosen, 5);
+      return chosen;
+    }
+
+    function probeHdr(inName) {
+      return new Promise((resolve) => {
+        let done = false;
+        const finish = (val) => {
+          if (done) return;
+          done = true;
+          try {
+            ffmpeg.setLogger(() => {});
+          } catch (e) {
+            /* ignore */
+          }
+          resolve(val);
+        };
+        try {
+          ffmpeg.setLogger(({ message } = {}) => {
+            const m = String(message || "").toLowerCase();
+            if (/smpte2084|st2084|arib-std-b67|\bhlg\b|smpte2086/.test(m)) finish(true);
+          });
+          ffmpeg
+            .run("-i", inName)
+            .catch(() => finish(false))
+            .then(() => finish(false));
+        } catch (e) {
+          finish(false);
+        }
+        setTimeout(() => finish(false), 8000);
+      });
+    }
+
     async function extractAnimatedFrames(file, fps) {
       await ensureFFmpeg();
-      setStatus(`extracting @ ${fps}fps`);
 
       const ext = getExt(file.name) || "bin";
       const inName = `input.${ext}`;
       ffmpeg.FS("writeFile", inName, await window.FFmpeg.fetchFile(file));
+      const isGif = ext === "gif";
 
-      const args = [
-        "-i", inName,
-        "-vf", `fps=${fps},scale=${OLED_W}:${OLED_H}:force_original_aspect_ratio=decrease,pad=${OLED_W}:${OLED_H}:(ow-iw)/2:(oh-ih)/2:color=black`,
-        "frame_%05d.png",
-      ];
-      await ffmpeg.run(...args);
-
-      const files = ffmpeg.FS("readdir", "/")
-        .filter((f) => /^frame_\d+\.png$/.test(f))
-        .sort();
-
-      const frames = [];
-      for (const name of files) {
-        const data = ffmpeg.FS("readFile", name);
-        const blob = new Blob([data.buffer], { type: "image/png" });
-        frames.push(await createImageBitmap(blob));
+      let useTonemap = els.hdrTonemap.checked;
+      if (!isGif && !useTonemap) {
+        const detectedHdr = await probeHdr(inName);
+        if (detectedHdr) {
+          useTonemap = true;
+          els.hdrTonemap.checked = true;
+          appendLog(tr("log.hdr"));
+        }
       }
 
-      for (const name of files) ffmpeg.FS("unlink", name);
+      const scalePart = `scale=${EXTRACT_CAP}:${EXTRACT_CAP}:force_original_aspect_ratio=decrease:flags=lanczos`;
+      const tonemapPart = useTonemap ? "tonemap=bt709:desat=0" : null;
+      const smoothVal = Number(els.motionSmooth.value);
+
+      let vf = null;
+      let outFps = fps;
+      let usedMinterp = false;
+
+      if (isGif) {
+        vf = tonemapPart ? `${tonemapPart},${scalePart}` : scalePart;
+      } else if (smoothVal && smoothVal > 1) {
+        outFps = Math.min(30, Math.max(fps, Math.round(fps * smoothVal)));
+        vf = [
+          tonemapPart,
+          `minterpolate=fps=${outFps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1`,
+          scalePart,
+        ]
+          .filter(Boolean)
+          .join(",");
+        usedMinterp = true;
+      } else {
+        vf = [tonemapPart, `fps=${fps}`, scalePart].filter(Boolean).join(",");
+      }
+
+      setStatus("extracting", { fps: outFps, extra: usedMinterp ? tr("st.smoothTag") : "" });
+      let frames = await runExtract(inName, vf);
+
+      if (!isGif && !usedMinterp && frames.length > 1) {
+        const motion = measureMotion(frames);
+        const effective = autoFps(fps, motion);
+        if (effective !== fps) {
+          outFps = effective;
+          autoFpsAdjusting = true;
+          els.fpsSelect.value = String(effective);
+          autoFpsAdjusting = false;
+          vf = [tonemapPart, `fps=${effective}`, scalePart].filter(Boolean).join(",");
+          frames = await runExtract(inName, vf);
+          appendLog(tr("log.autofps", { fps: effective, motion: motion.toFixed(1) }));
+        }
+      }
+
+      if (usedMinterp && !frames.length) {
+        appendLog(tr("log.minterpFail"));
+        usedMinterp = false;
+        outFps = fps;
+        const simpleVf = [tonemapPart, `fps=${fps}`, scalePart].filter(Boolean).join(",");
+        frames = await runExtract(inName, simpleVf);
+      }
+
+      if (!frames.length && tonemapPart) {
+        appendLog(tr("log.tonemapFail"));
+        els.hdrTonemap.checked = false;
+        const plainVf = isGif ? scalePart : `fps=${outFps},${scalePart}`;
+        frames = await runExtract(inName, plainVf);
+      }
+
       ffmpeg.FS("unlink", inName);
-      setStatus(`ready (${frames.length} frame${frames.length === 1 ? "" : "s"})`);
-      appendLog(`Extracted ${frames.length} frames at ${fps} FPS using FFmpeg.`);
+
+      frameDurationsMs = isGif
+        ? padDelays(await readGifDelays(file), frames.length)
+        : uniformDurations(frames.length, outFps);
+
+      setStatus("readyFrames", { count: frames.length });
+      appendLog(
+        tr("log.extracted", {
+          n: frames.length,
+          fps: outFps,
+          suffix: isGif ? tr("log.gifSuffix") : "",
+        })
+      );
       return frames;
     }
 
+    async function readGifDelays(file) {
+      let u8;
+      if (typeof file.arrayBuffer === "function") {
+        u8 = new Uint8Array(await file.arrayBuffer());
+      } else {
+        u8 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(new Uint8Array(reader.result));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsArrayBuffer(file);
+        });
+      }
+      return parseGifDelays(u8);
+    }
+
+    function parseGifDelays(u8) {
+      const delays = [];
+      if (u8.length < 13) return delays;
+      if (!(u8[0] === 0x47 && u8[1] === 0x49 && u8[2] === 0x46)) return delays;
+
+      let pos = 6; // after "GIF87a"/"GIF89a"
+      pos += 7; // logical screen descriptor
+      const packedLsd = u8[10];
+      if (packedLsd & 0x80) pos += 3 * (1 << ((packedLsd & 0x07) + 1));
+
+      let pendingDelay = 100;
+
+      while (pos < u8.length - 1) {
+        const b = u8[pos];
+
+        if (b === 0x3b) break; // trailer
+
+        if (b === 0x21) {
+          pos += 1;
+          if (pos >= u8.length) break;
+          const label = u8[pos];
+          pos += 1;
+
+          if (label === 0xf9) {
+            if (pos >= u8.length) break;
+            const size = u8[pos];
+            pos += 1;
+            if (size >= 4 && pos + 4 <= u8.length) {
+              const cs = (u8[pos + 2] << 8) | u8[pos + 1];
+              pendingDelay = cs > 0 ? cs * 10 : 100;
+            }
+            pos += size + 1;
+          } else {
+            while (pos < u8.length) {
+              const blen = u8[pos];
+              pos += 1;
+              if (blen === 0) break;
+              pos += blen;
+            }
+          }
+          continue;
+        }
+
+        if (b === 0x2c) {
+          delays.push(pendingDelay);
+          pendingDelay = 100;
+          pos += 9; // image descriptor (incl. separator)
+          if (pos >= u8.length) break;
+          const packedImage = u8[pos - 1];
+          if (packedImage & 0x80) pos += 3 * (1 << ((packedImage & 0x07) + 1));
+          pos += 1; // LZW minimum code size
+          while (pos < u8.length) {
+            const blen = u8[pos];
+            pos += 1;
+            if (blen === 0) break;
+            pos += blen;
+          }
+          continue;
+        }
+
+        pos += 1;
+      }
+      return delays;
+    }
+
     function makeHeaderCode(varName, packedFrames) {
-      const flat = new Uint8Array(packedFrames.length * BYTES_PER_FRAME);
-      for (let i = 0; i < packedFrames.length; i++) {
+      const frameCount = packedFrames.length;
+      const flat = new Uint8Array(frameCount * BYTES_PER_FRAME);
+      for (let i = 0; i < frameCount; i++) {
         flat.set(packedFrames[i], i * BYTES_PER_FRAME);
       }
 
       const lines = [];
       lines.push(`#pragma once`);
       lines.push(`#include <stdint.h>`);
-      lines.push(`#include <avr/pgmspace.h>`);
       lines.push("");
-      lines.push(`const uint16_t ${varName}_frame_count = ${packedFrames.length};`);
+      lines.push(`#if defined(__AVR__)`);
+      lines.push(`#include <avr/pgmspace.h>`);
+      lines.push(`#define ${varName}_PROGMEM PROGMEM`);
+      lines.push(`#else`);
+      lines.push(`#define ${varName}_PROGMEM`);
+      lines.push(`#endif`);
+      lines.push("");
+      lines.push(`const uint16_t ${varName}_frame_count = ${frameCount};`);
       lines.push(`const uint16_t ${varName}_frame_size = ${BYTES_PER_FRAME};`);
-      lines.push(`const uint8_t ${varName}[] PROGMEM = {`);
+      lines.push(
+        `const uint8_t ${varName}_data[${frameCount}][${BYTES_PER_FRAME}] ${varName}_PROGMEM = {`
+      );
 
-      for (let i = 0; i < flat.length; i += 16) {
-        const chunk = Array.from(flat.slice(i, i + 16))
-          .map((b) => `0x${b.toString(16).padStart(2, "0")}`)
-          .join(", ");
-        lines.push(`  ${chunk},`);
+      for (let f = 0; f < frameCount; f++) {
+        const frame = packedFrames[f];
+        lines.push(`  {`);
+        for (let j = 0; j < BYTES_PER_FRAME; j += 16) {
+          const chunk = Array.from(frame.slice(j, j + 16))
+            .map((b) => `0x${b.toString(16).padStart(2, "0")}`)
+            .join(", ");
+          lines.push(`    ${chunk},`);
+        }
+        lines.push(`  },`);
       }
-      lines.push("};");
+
+      lines.push(`};`);
+      lines.push(`#undef ${varName}_PROGMEM`);
       return { code: lines.join("\n"), binary: flat };
     }
 
@@ -669,11 +1880,15 @@
 
     async function processFile(file) {
       stopPlayback(true);
+      releaseSourceFrames();
       currentFile = file;
-      els.fileMeta.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      els.fileMeta.removeAttribute("data-i18n");
+      els.fileMeta.textContent = tr("log.selected", { name: file.name, size: (file.size / 1024).toFixed(1) });
       latestHeaderCode = "";
       latestBinary = null;
       oledFramesPacked = [];
+      frameDurationsMs = [];
+      sequenceDirty = true;
       els.headerPreview.value = "";
       disableExportButtons(true);
 
@@ -695,11 +1910,11 @@
         updateControlLabels();
         updatePlayerStatus();
         updateStats(sourceFrames.length, lastProcessMsPerFrame);
-        appendLog(`Loaded file "${file.name}" with ${sourceFrames.length} frame(s).`);
+        appendLog(tr("log.loaded", { name: file.name, n: sourceFrames.length }));
       } catch (err) {
         console.error(err);
-        setStatus(`error: ${err.message}`);
-        appendLog(`Error while processing file: ${err.message}`);
+        setStatus("error", { msg: err.message });
+        appendLog(tr("log.error", { msg: err.message }));
       }
     }
 
@@ -711,49 +1926,30 @@
 
     function buildAllFrames() {
       if (!sourceFrames.length) return;
-      const tmpCanvas = document.createElement("canvas");
-      tmpCanvas.width = OLED_W;
-      tmpCanvas.height = OLED_H;
-      const tmpCtx = tmpCanvas.getContext("2d", { willReadFrequently: true });
-      tmpCtx.imageSmoothingEnabled = false;
+      if (sequenceDirty) computeSequenceMonos();
 
-      const brightness = Number(els.brightness.value);
-      const contrast = Number(els.contrast.value);
       const algorithm = els.ditherAlgo.value;
       const orientation = els.packOrientation.value;
       const bitOrder = els.bitOrder.value;
-      const scalingMode = els.scalingMode.value;
-      const w = tmpCanvas.width;
-      const h = tmpCanvas.height;
 
       oledFramesPacked = [];
       const t0 = performance.now();
-      let totalMs = 0;
       let frameNumber = 0;
-      for (const frame of sourceFrames) {
-        drawScaledFrame(tmpCtx, frame, scalingMode);
-        const imageData = tmpCtx.getImageData(0, 0, w, h);
-        const frameStart = performance.now();
-        const mono = processImageDataToMono(imageData, brightness, contrast);
-        totalMs += performance.now() - frameStart;
-        oledFramesPacked.push(packMonoBits(mono, w, h, orientation, bitOrder));
+      for (const mono of sequenceMonos) {
+        oledFramesPacked.push(packMonoBits(mono, OLED_W, OLED_H, orientation, bitOrder));
         frameNumber += 1;
-        if (frameNumber <= 3 || frameNumber % 25 === 0 || frameNumber === sourceFrames.length) {
-          appendLog(`Frame ${frameNumber}/${sourceFrames.length} processed using ${algorithm} dithering.`);
+        if (frameNumber <= 3 || frameNumber % 25 === 0 || frameNumber === sequenceMonos.length) {
+          appendLog(tr("log.frame", { f: frameNumber, n: sequenceMonos.length, dither: tr("o." + algorithm) }));
         }
       }
-      lastProcessMsPerFrame = totalMs / Math.max(1, sourceFrames.length);
       updateStats(sourceFrames.length, lastProcessMsPerFrame);
-      appendLog(
-        `Export frames generated: ${sourceFrames.length} frames, ${Math.round(performance.now() - t0)} ms total, ` +
-        `${lastProcessMsPerFrame.toFixed(2)} ms/frame.`
-      );
+      appendLog(tr("log.exported", { n: sequenceMonos.length, ms: Math.round(performance.now() - t0) }));
     }
 
     function stopPlayback(resetTick) {
       isPlaying = false;
       if (resetTick) lastTick = 0;
-      els.playPauseBtn.textContent = "Play";
+      els.playPauseBtn.textContent = tr("btn.play");
       updatePlayerStatus();
     }
 
@@ -772,7 +1968,10 @@
       }
       if (!lastTick) lastTick = ts;
       const elapsed = ts - lastTick;
-      const frameDuration = getFrameDurationMs();
+      const frameDuration =
+        frameDurationsMs.length && frameDurationsMs[currentFrameIndex]
+          ? frameDurationsMs[currentFrameIndex]
+          : getFrameDurationMs();
 
       if (elapsed >= frameDuration) {
         const steps = Math.floor(elapsed / frameDuration);
@@ -810,7 +2009,13 @@
         els.contrast,
         els.dither,
         els.threshold,
+        els.detailBoost,
         els.ditherAlgo,
+        els.lumModel,
+        els.serpentine,
+        els.autoLevels,
+        els.flicker,
+        els.bgFill,
         els.scalingMode,
         els.packOrientation,
         els.bitOrder,
@@ -836,7 +2041,7 @@
       els.playPauseBtn.addEventListener("click", () => {
         if (sourceFrames.length < 2) return;
         isPlaying = !isPlaying;
-        els.playPauseBtn.textContent = isPlaying ? "Pause" : "Play";
+        els.playPauseBtn.textContent = isPlaying ? tr("btn.pause") : tr("btn.play");
         if (isPlaying) lastTick = 0;
         updatePlayerStatus();
       });
@@ -845,7 +2050,7 @@
         if (!currentFile) return;
         stopPlayback(true);
         currentFrameIndex = 0;
-        appendLog("Reprocess requested. Restarting extraction from frame 1.");
+        appendLog(tr("log.reprocess"));
         await processFile(currentFile);
       });
 
@@ -864,7 +2069,7 @@
         latestBinary = binary;
         els.headerPreview.value = code;
         disableExportButtons(false);
-        appendLog(`Header and BIN prepared with variable "${base}".`);
+        appendLog(tr("log.headerReady", { name: base }));
       });
 
       els.downloadHeaderBtn.addEventListener("click", () => {
@@ -882,24 +2087,49 @@
       els.copyHeaderBtn.addEventListener("click", async () => {
         if (!latestHeaderCode) return;
         await navigator.clipboard.writeText(latestHeaderCode);
-        els.copyHeaderBtn.textContent = "Copied!";
-        setTimeout(() => (els.copyHeaderBtn.textContent = "Copy C++ to Clipboard"), 1200);
+        els.copyHeaderBtn.textContent = tr("btn.copied");
+        setTimeout(() => (els.copyHeaderBtn.textContent = tr("btn.copy")), 1200);
       });
 
       els.fpsSelect.addEventListener("change", () => {
-        if (sourceFrames.length) {
-          renderFramePreview(currentFrameIndex);
+        if (!autoFpsAdjusting && sourceFrames.length) {
+          appendLog(tr("log.fpsHint", { btn: tr("btn.reprocess") }));
         }
+      });
+
+      els.motionSmooth.addEventListener("change", () => {
+        if (sourceFrames.length) {
+          appendLog(tr("log.smoothHint", { btn: tr("btn.reprocess") }));
+        }
+      });
+
+      els.hdrTonemap.addEventListener("change", () => {
+        if (sourceFrames.length) {
+          appendLog(tr("log.tonemapHint", { btn: tr("btn.reprocess") }));
+        }
+      });
+
+      document.querySelectorAll(".lang-pill").forEach((btn) => {
+        btn.addEventListener("click", () => setLang(btn.dataset.lang));
       });
     }
 
     wireEvents();
+    document.querySelectorAll("input[type='range'].slider").forEach((el) => {
+      const paint = () => {
+        const v = ((el.value - el.min) / (el.max - el.min)) * 100;
+        el.style.setProperty("--v", v + "%");
+      };
+      el.addEventListener("input", paint);
+      paint();
+    });
     rafId = requestAnimationFrame(animationLoop);
     updateControlLabels();
     updateStats(0, 0);
     updatePlayerStatus();
     setStatus("idle");
-    appendLog("System initialized. Awaiting media input.");
+    setLang(localStorage.getItem("oled_lang") === "ru" ? "ru" : "en");
+    appendLog(tr("log.init"));
   </script>
 </body>
 </html>
