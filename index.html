@@ -565,7 +565,7 @@
               </div>
             </div>
             <label class="switch"><input id="hdrTonemap" type="checkbox" /><span class="switch-track"><i></i></span><span><span data-i18n="hdrTonemap">HDR → SDR tonemapping</span> <span class="tip" data-i18n-tip="hdrTonemapTip">i</span></span></label>
-            <p class="field-hint" data-i18n="timingHint">Frame rate, smoothing and tonemapping apply on "Reprocess Media".</p>
+            <p class="field-hint" data-i18n="timingHint">Motion smoothing and tonemapping apply on "Reprocess Media"; frame rate applies automatically.</p>
           </div>
         </details>
 
@@ -754,6 +754,7 @@
     let sequenceDirty = true;
     let sequenceDebounce = null;
     let bgDetection = null;
+    let fpsReprocessTimer = null;
     let autoFpsAdjusting = false;
     let currentLang = "en";
     let lastStatusKey = "idle";
@@ -830,7 +831,7 @@
         bitOrderTip: "Order of bits inside each byte. MSB first is the Adafruit_SSD1306 standard; LSB first suits many other libraries.",
         varName: "C++ variable name",
         varNameTip: "Name of the generated array (oled_animation_data). Keep it a valid C identifier.",
-        timingHint: 'Frame rate, smoothing and tonemapping apply on "Reprocess Media".',
+        timingHint: 'Motion smoothing and tonemapping apply on "Reprocess Media"; frame rate applies automatically.',
         "ph.header": "Generated C++ header will appear here…",
         "o.floyd": "Floyd-Steinberg",
         "o.jarvis": "Jarvis",
@@ -888,6 +889,7 @@
         "log.headerReady": 'Header and BIN prepared with variable "{name}".',
         "log.frame": "Frame {f}/{n} processed using {dither} dithering.",
         "log.fpsHint": 'FPS changed. Click "{btn}" to re-extract frames at the new rate.',
+        "log.fpsApply": 'FPS changed to {fps}. Re-extracting frames automatically…',
         "log.smoothHint": 'Motion smoothing changed. Click "{btn}" to re-extract frames.',
         "log.tonemapHint": 'HDR tonemapping changed. Click "{btn}" to re-extract frames.',
         docTitle: "OLED Media Studio — GIF/Video → SSD1306",
@@ -962,7 +964,7 @@
         bitOrderTip: "Порядок битов внутри байта. MSB first — стандарт Adafruit_SSD1306; LSB first подходит для многих других библиотек.",
         varName: "Имя переменной C++",
         varNameTip: "Имя генерируемого массива (oled_animation_data). Должно оставаться корректным идентификатором C.",
-        timingHint: 'FPS, сглаживание и тонамаппинг применяются кнопкой «Повторить обработку».',
+        timingHint: 'Сглаживание и тонамаппинг применяются кнопкой «Повторить обработку»; частота кадров применяется автоматически.',
         "ph.header": "Здесь появится сгенерированный C++-заголовок…",
         "o.floyd": "Флойд-Стейнберг",
         "o.jarvis": "Джарвис",
@@ -1020,6 +1022,7 @@
         "log.headerReady": 'Заголовок и BIN подготовлены с переменной "{name}".',
         "log.frame": "Кадр {f}/{n} обработан, дитеря: {dither}.",
         "log.fpsHint": 'Частота изменена. Нажмите «{btn}», чтобы переизвлечь кадры.',
+        "log.fpsApply": 'Частота изменена на {fps} FPS. Автоматически переизвлекаю кадры…',
         "log.smoothHint": 'Сглаживание изменено. Нажмите «{btn}», чтобы переизвлечь кадры.',
         "log.tonemapHint": 'Тонамаппинг изменён. Нажмите «{btn}», чтобы переизвлечь кадры.',
         docTitle: "OLED Media Studio — GIF/видео → SSD1306",
@@ -1986,6 +1989,7 @@
       updateControlLabels();
       sequenceDirty = true;
       clearTimeout(sequenceDebounce);
+      clearTimeout(fpsReprocessTimer);
       if (sourceFrames.length) renderFramePreview(currentFrameIndex, false);
       appendLog(tr("log.reset"));
       if (extractionChanged) appendLog(tr("timingHint"));
@@ -1994,6 +1998,7 @@
     async function processFile(file) {
       stopPlayback(true);
       clearTimeout(sequenceDebounce);
+      clearTimeout(fpsReprocessTimer);
       releaseSourceFrames();
       currentFile = file;
       els.fileMeta.removeAttribute("data-i18n");
@@ -2215,9 +2220,16 @@
       });
 
       els.fpsSelect.addEventListener("change", () => {
-        if (!autoFpsAdjusting && sourceFrames.length) {
-          appendLog(tr("log.fpsHint", { btn: tr("btn.reprocess") }));
-        }
+        if (autoFpsAdjusting || !currentFile) return;
+        clearTimeout(fpsReprocessTimer);
+        fpsReprocessTimer = setTimeout(() => {
+          fpsReprocessTimer = null;
+          if (!currentFile) return;
+          appendLog(tr("log.fpsApply", { fps: els.fpsSelect.value }));
+          stopPlayback(true);
+          currentFrameIndex = 0;
+          processFile(currentFile);
+        }, 500);
       });
 
       els.motionSmooth.addEventListener("change", () => {
