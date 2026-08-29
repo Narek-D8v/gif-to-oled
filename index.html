@@ -415,6 +415,10 @@
           <button id="langEn" class="lang-pill" data-lang="en">EN</button>
           <button id="langRu" class="lang-pill" data-lang="ru">RU</button>
         </span>
+        <button id="resetBtn" class="btn btn-ghost btn-sm">
+          <span data-i18n="btn.reset">Reset settings</span>
+          <span class="tip" data-i18n-tip="resetTip">i</span>
+        </button>
       </div>
     </header>
 
@@ -710,6 +714,7 @@
       stepForwardBtn: document.getElementById("stepForwardBtn"),
       playPauseBtn: document.getElementById("playPauseBtn"),
       reprocessBtn: document.getElementById("reprocessBtn"),
+      resetBtn: document.getElementById("resetBtn"),
       convertBtn: document.getElementById("convertBtn"),
       downloadHeaderBtn: document.getElementById("downloadHeaderBtn"),
       downloadBinBtn: document.getElementById("downloadBinBtn"),
@@ -771,6 +776,8 @@
         noFile: "No file selected.",
         "btn.reprocess": "↻ Reprocess Media",
         "btn.reprocessTip": "Re-runs FFmpeg extraction. Required after changing frame rate, motion smoothing or tonemapping.",
+        "btn.reset": "Reset settings",
+        "resetTip": "Restores every control to its factory default and refreshes the preview.",
         "btn.generate": "Generate export frames",
         "tip.generate": "Builds the packed export frames (identical to the preview) and fills the code preview below. Then download or copy.",
         "btn.downloadH": "Download .h",
@@ -875,6 +882,7 @@
         "log.minterpFail": "Motion smoothing not available in this FFmpeg build; falling back to uniform frame rate.",
         "log.tonemapFail": "Tonemapping not available in this FFmpeg build; falling back to direct conversion.",
         "log.reprocess": "Reprocess requested. Restarting extraction from frame 1.",
+        "log.reset": "All settings reset to defaults.",
         "log.error": "Error while processing file: {msg}",
         "log.exported": "Export frames generated: {n} frames, {ms} ms total.",
         "log.headerReady": 'Header and BIN prepared with variable "{name}".',
@@ -900,6 +908,8 @@
         noFile: "Файл не выбран.",
         "btn.reprocess": "↻ Повторить обработку",
         "btn.reprocessTip": "Заново запускает извлечение кадров FFmpeg. Нужно после смены FPS, сглаживания или тонамаппинга.",
+        "btn.reset": "Сбросить настройки",
+        "resetTip": "Возвращает все параметры к заводским значениям и обновляет превью.",
         "btn.generate": "Сформировать кадры экспорта",
         "tip.generate": "Собирает упакованные кадры экспорта (идентичны предпросмотру) и заполняет окно кода ниже. Затем можно скачать или скопировать.",
         "btn.downloadH": "Скачать .h",
@@ -1004,6 +1014,7 @@
         "log.minterpFail": "Интерполяция недоступна в этой сборке FFmpeg; откат к равномерной частоте.",
         "log.tonemapFail": "Тонамаппинг недоступен в этой сборке FFmpeg; откат к прямой конвертации.",
         "log.reprocess": "Запрошена повторная обработка. Перезапуск извлечения кадров.",
+        "log.reset": "Все настройки сброшены к заводским значениям.",
         "log.error": "Ошибка при обработке файла: {msg}",
         "log.exported": "Кадры экспорта созданы: {n} кадров, {ms} мс.",
         "log.headerReady": 'Заголовок и BIN подготовлены с переменной "{name}".',
@@ -1948,6 +1959,38 @@
       URL.revokeObjectURL(url);
     }
 
+    function resetAllSettings() {
+      const extractionChanged =
+        els.fpsSelect.value !== "10" || els.motionSmooth.value !== "off" || els.hdrTonemap.checked;
+      stopPlayback(true);
+      els.scalingMode.value = "fit";
+      els.ditherAlgo.value = "floyd";
+      els.lumModel.value = "srgb";
+      els.bgFill.value = "black";
+      els.motionSmooth.value = "off";
+      els.fpsSelect.value = "10";
+      els.packOrientation.value = "vertical";
+      els.bitOrder.value = "lsb";
+      els.dither.value = "100";
+      els.threshold.value = "128";
+      els.brightness.value = "0";
+      els.contrast.value = "0";
+      els.detailBoost.value = "10";
+      els.serpentine.checked = true;
+      els.autoLevels.checked = true;
+      els.flicker.checked = true;
+      els.hdrTonemap.checked = false;
+      els.invertColors.checked = false;
+      els.backgroundKey.checked = false;
+      els.varName.value = "oled_animation";
+      updateControlLabels();
+      sequenceDirty = true;
+      clearTimeout(sequenceDebounce);
+      if (sourceFrames.length) renderFramePreview(currentFrameIndex, false);
+      appendLog(tr("log.reset"));
+      if (extractionChanged) appendLog(tr("timingHint"));
+    }
+
     async function processFile(file) {
       stopPlayback(true);
       clearTimeout(sequenceDebounce);
@@ -2128,6 +2171,10 @@
         currentFrameIndex = 0;
         appendLog(tr("log.reprocess"));
         await processFile(currentFile);
+      });
+
+      els.resetBtn.addEventListener("click", () => {
+        resetAllSettings();
       });
 
       els.convertBtn.addEventListener("click", () => {
