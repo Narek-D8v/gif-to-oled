@@ -879,6 +879,7 @@
         "log.extracted": "Extracted {n} frames at {fps} FPS using FFmpeg{suffix}.",
         "log.gifSuffix": " (original GIF timing preserved)",
         "log.autofps": "Auto-tuned frame rate: {fps} FPS (measured motion {motion}/255). Low-motion content needs fewer frames for the same look.",
+        "log.gifFps": "GIF kept {n} frames at {fps} FPS.",
         "log.hdr": "HDR video detected — HDR → SDR tonemapping enabled automatically.",
         "log.minterpFail": "Motion smoothing not available in this FFmpeg build; falling back to uniform frame rate.",
         "log.tonemapFail": "Tonemapping not available in this FFmpeg build; falling back to direct conversion.",
@@ -1012,6 +1013,7 @@
         "log.extracted": "Извлечено {n} кадров при {fps} FPS через FFmpeg{suffix}.",
         "log.gifSuffix": " (сохранён исходный тайминг GIF)",
         "log.autofps": "Автоматически выбрана частота: {fps} FPS (движение {motion}/255). Спокойному контенту нужно меньше кадров.",
+        "log.gifFps": "GIF: оставлено {n} кадров при {fps} FPS.",
         "log.hdr": "Обнаружено HDR-видео — тонамаппинг включён автоматически.",
         "log.minterpFail": "Интерполяция недоступна в этой сборке FFmpeg; откат к равномерной частоте.",
         "log.tonemapFail": "Тонамаппинг недоступен в этой сборке FFmpeg; откат к прямой конвертации.",
@@ -1675,6 +1677,26 @@
       return out;
     }
 
+    function decimateFrames(frames, delays, targetFps) {
+      if (targetFps <= 0 || frames.length <= 1) return { frames, delays };
+      const totalMs = delays.reduce((a, b) => a + b, 0) || delays.length * 100;
+      const targetCount = Math.max(1, Math.min(frames.length, Math.round((totalMs / 1000) * targetFps)));
+      if (targetCount >= frames.length) return { frames, delays };
+      const idxs = [];
+      for (let i = 0; i < targetCount; i++) {
+        idxs.push(Math.round((i * (frames.length - 1)) / Math.max(1, targetCount - 1)));
+      }
+      const uniq = [];
+      for (const i of idxs) if (uniq[uniq.length - 1] !== i) uniq.push(i);
+      const keptDelays = uniq.map((i) => delays[i]);
+      const keptTotal = keptDelays.reduce((a, b) => a + b, 0) || 1;
+      const scale = totalMs / keptTotal;
+      return {
+        frames: uniq.map((i) => frames[i]),
+        delays: keptDelays.map((d) => Math.max(1, Math.round(d * scale))),
+      };
+    }
+
     function measureMotion(frames) {
       if (frames.length < 2) return 0;
       const cw = 40;
@@ -1818,6 +1840,15 @@
       frameDurationsMs = isGif
         ? padDelays(await readGifDelays(file), frames.length)
         : uniformDurations(frames.length, outFps);
+
+      if (isGif) {
+        const targetFps = Number(els.fpsSelect.value) || 1;
+        const fullCount = frames.length;
+        const res = decimateFrames(frames, frameDurationsMs, targetFps);
+        frames = res.frames;
+        frameDurationsMs = res.delays;
+        if (res.frames.length < fullCount) appendLog(tr("log.gifFps", { n: frames.length, fps: targetFps }));
+      }
 
       setStatus("readyFrames", { count: frames.length });
       appendLog(
